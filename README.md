@@ -1,7 +1,7 @@
 # AOSD-FinalAssignment
 Final Assignment for the university course Analysis of Spatio-Temporal data at the university of Münster in the winter term 2017/2018
 
-The topic of this final Assignment is the climate change in Texas, USA
+The topic of this final assignment is the climate change in Texas, USA
 
 # Manifestation of the climate change in Texas over the past 70 years
 
