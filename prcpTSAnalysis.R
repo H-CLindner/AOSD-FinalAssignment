@@ -1,0 +1,1 @@
+#script for the analysis of the precipitation time series

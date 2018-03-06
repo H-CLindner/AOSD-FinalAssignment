@@ -1,3 +1,5 @@
+#script for the analysis of temperature time series
+
 library("readxl")
 library("xts")
 library("maps")
