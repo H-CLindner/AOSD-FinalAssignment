@@ -199,7 +199,7 @@ acfMccookEvap = acf(evapMccook, lag.max = 365)
 pacfMccookEvap = pacf(evapMccook)
 
 #make a ts object out of the xts object
-start = as.Date("1963-09-01") 
+start = as.Date("1963-01-09") 
 evapMccook2 = ts(mccookEvap$EVAP, start=start, frequency = 365.25)
 evapMccook2 = na.approx(evapMccook2)
 stlMccookEvap = stl(evapMccook2, s.window="periodic")
@@ -217,7 +217,7 @@ maxEvapMccook = max(evapMccook)
 varEvapMccook = var(evapMccook)
 
 
-#boxplot of temperature timeseries
+#boxplot of evaporation timeseries
 combineEvapTS = merge(evapAngleton, evapBenbrook, evapfortStockton, evapMccook)
 combineEvapTS = rename(combineEvapTS, replace=c("evapAngleton" = "Angleton", "evapBenbrook" = "Benbrook", "evapfortStockton" = "Fort Stockton", "evapMccook" = "Mccook"))
 boxplot(coredata(combineEvapTS))

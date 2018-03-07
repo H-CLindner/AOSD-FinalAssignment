@@ -153,7 +153,7 @@ maxTempfortStockton = max(tmpMaxfortStockton)
 varTempfortStockton = var(tmpMaxfortStockton)
 
 # Mccook, Texas in the South West near the coast of the Golf of Mexico and the Mexican border
-# Temperature timeseries for Mccook in the NorthWest of Texas
+# Temperature timeseries for Mccook in the South West of Texas
 MccookTemp = read_xlsx("timeseries/Mccook, SW/Mccook, TMax.xlsx")
 
 MccookTempIndex = (1950 + MccookTemp$DATE)
