@@ -17,10 +17,10 @@ angletonTempIndex = (1950 + angletonTemp$DATE)
 angletonTempIndex.date = as.Date(angletonTempIndex)
 
 #to be sure that there are no missing dates in the data frame, take the first and last entry and merge the data frames; fill missing dates with NA and interpolate later
-DateRangeAngleton = seq(min(angletonTempIndex.date), max(angletonTempIndex.date), by = 1)
-allDatesAngleton = data.frame(DateRangeAngleton)
-allDatesAngleton = rename(allDatesAngleton, replace = c("DateRangeAngleton" = "DATE"))
-angletonTemp = merge(angletonTemp, allDatesAngleton, all=TRUE)
+DateRangeAngletonTemp = seq(min(angletonTempIndex.date), max(angletonTempIndex.date), by = 1)
+allDatesAngletonTemp = data.frame(DateRangeAngletonTemp)
+allDatesAngletonTemp = rename(allDatesAngletonTemp, replace = c("DateRangeAngletonTemp" = "DATE"))
+angletonTemp = merge(angletonTemp, allDatesAngletonTemp, all=TRUE)
 angletonTemp = angletonTemp[!duplicated(angletonTemp$DATE),]
 
 #create an xts object out of the data frame for temperature
@@ -50,8 +50,8 @@ pacfAngletonTemp = pacf(tmpMaxAngleton)
 start = as.Date("1950-01-01") 
 tmpMaxAngleton2 = ts(angletonTemp$TMAX, start=start, frequency = 365.25)
 tmpMaxAngleton2 = na.approx(tmpMaxAngleton2)
-stlAngleton = stl(tmpMaxAngleton2, s.window="periodic")
-trendTmpAngleton = stlAngleton$time.series[,2]
+stlAngletonTemp = stl(tmpMaxAngleton2, s.window="periodic")
+trendTmpAngleton = stlAngletonTemp$time.series[,2]
 
 #forecast
 arimaTempAngleton = auto.arima(tmpMaxAngleton)
@@ -72,10 +72,10 @@ benbrookTempIndex = (1950 + benbrookTemp$DATE)
 benbrookTempIndex.date = as.Date(benbrookTempIndex)
 
 #to be sure that there are no missing dates in the data frame, take the first and last entry and merge the data frames; fill missing dates with NA and interpolate later
-DateRangeBenbrook = seq(min(benbrookTempIndex.date), max(benbrookTempIndex.date), by = 1)
-allDatesBenbrook = data.frame(DateRangeBenbrook)
-allDatesBenbrook = rename(allDatesBenbrook, replace = c("DateRangeBenbrook" = "DATE"))
-benbrookTemp = merge(benbrookTemp, allDatesBenbrook, all=TRUE)
+DateRangeBenbrookTemp = seq(min(benbrookTempIndex.date), max(benbrookTempIndex.date), by = 1)
+allDatesBenbrookTemp = data.frame(DateRangeBenbrookTemp)
+allDatesBenbrookTemp = rename(allDatesBenbrookTemp, replace = c("DateRangeBenbrookTemp" = "DATE"))
+benbrookTemp = merge(benbrookTemp, allDatesBenbrookTemp, all=TRUE)
 benbrookTemp = benbrookTemp[!duplicated(benbrookTemp$DATE),]
 
 benbrookTempIndex = (1950 + benbrookTemp$DATE)
@@ -94,8 +94,8 @@ plot(tmpMaxBenbrook)
 start = as.Date("1950-07-03")
 tmpMaxBenbrook2 = ts(benbrookTemp$TMAX, start=start, frequency = 365.25)
 tmpMaxBenbrook2 = na.approx(tmpMaxBenbrook2)
-stlBenbrook = stl(tmpMaxBenbrook2, s.window="periodic")
-trendTmpBenbrook = stlBenbrook$time.series[,2]
+stlBenbrookTemp = stl(tmpMaxBenbrook2, s.window="periodic")
+trendTmpBenbrook = stlBenbrookTemp$time.series[,2]
 
 #forecast
 arimaTempBenbrook = auto.arima(tmpMaxBenbrook)
@@ -116,10 +116,10 @@ fortStocktonTempIndex = (1950 + fortStocktonTemp$DATE)
 fortStocktonTempIndex.date = as.Date(fortStocktonTempIndex)
 
 #to be sure that there are no missing dates in the data frame, take the first and last entry and merge the data frames; fill missing dates with NA and interpolate later
-DateRangefortStockton = seq(min(fortStocktonTempIndex.date), max(fortStocktonTempIndex.date), by = 1)
-allDatesfortStockton = data.frame(DateRangefortStockton)
-allDatesfortStockton = rename(allDatesfortStockton, replace = c("DateRangefortStockton" = "DATE"))
-fortStocktonTemp = merge(fortStocktonTemp, allDatesfortStockton, all=TRUE)
+DateRangefortStocktonTemp = seq(min(fortStocktonTempIndex.date), max(fortStocktonTempIndex.date), by = 1)
+allDatesfortStocktonTemp = data.frame(DateRangefortStocktonTemp)
+allDatesfortStocktonTemp = rename(allDatesfortStocktonTemp, replace = c("DateRangefortStocktonTemp" = "DATE"))
+fortStocktonTemp = merge(fortStocktonTemp, allDatesfortStocktonTemp, all=TRUE)
 fortStocktonTemp = fortStocktonTemp[!duplicated(fortStocktonTemp$DATE),]
 
 fortStocktonTempIndex = (1950 + fortStocktonTemp$DATE)
@@ -138,8 +138,8 @@ plot(tmpMaxfortStockton)
 start = as.Date("1950-01-01")
 tmpMaxfortStockton2 = ts(fortStocktonTemp$TMAX, start=start, frequency = 365.25)
 tmpMaxfortStockton2 = na.approx(tmpMaxfortStockton2)
-stlfortStockton = stl(tmpMaxfortStockton2, s.window="periodic")
-trendTmpfortStockton = stlfortStockton$time.series[,2]
+stlfortStocktonTemp = stl(tmpMaxfortStockton2, s.window="periodic")
+trendTmpfortStockton = stlfortStocktonTemp$time.series[,2]
 
 #forecast
 arimaTempfortStockton = auto.arima(tmpMaxfortStockton)
@@ -160,10 +160,10 @@ MccookTempIndex = (1950 + MccookTemp$DATE)
 MccookTempIndex.date = as.Date(MccookTempIndex)
 
 #to be sure that there are no missing dates in the data frame, take the first and last entry and merge the data frames; fill missing dates with NA and interpolate later
-DateRangeMccook = seq(min(MccookTempIndex.date), max(MccookTempIndex.date), by = 1)
-allDatesMccook = data.frame(DateRangeMccook)
-allDatesMccook = rename(allDatesMccook, replace = c("DateRangeMccook" = "DATE"))
-MccookTemp = merge(MccookTemp, allDatesMccook, all=TRUE)
+DateRangeMccookTemp = seq(min(MccookTempIndex.date), max(MccookTempIndex.date), by = 1)
+allDatesMccookTemp = data.frame(DateRangeMccookTemp)
+allDatesMccookTemp = rename(allDatesMccookTemp, replace = c("DateRangeMccookTemp" = "DATE"))
+MccookTemp = merge(MccookTemp, allDatesMccookTemp, all=TRUE)
 MccookTemp = MccookTemp[!duplicated(MccookTemp$DATE),]
 
 MccookTempIndex = (1950 + MccookTemp$DATE)
@@ -182,8 +182,8 @@ plot(tmpMaxMccook)
 start = as.Date("1950-01-01")
 tmpMaxMccook2 = ts(MccookTemp$TMAX, start=start, frequency = 365.25)
 tmpMaxMccook2 = na.approx(tmpMaxMccook2)
-stlMccook = stl(tmpMaxMccook2, s.window="periodic")
-trendTmpMccook = stlMccook$time.series[,2]
+stlMccookTemp = stl(tmpMaxMccook2, s.window="periodic")
+trendTmpMccook = stlMccookTemp$time.series[,2]
 
 #forecast
 arimaTempMccook = auto.arima(tmpMaxMccook)
@@ -202,22 +202,22 @@ combineTmpTS = rename(combineTmpTS, replace=c("tmpMaxAngleton" = "Angleton", "tm
 boxplot(coredata(combineTmpTS))
 
 #linear models of the time series
-linTrendAngleton = lm(trendTmpAngleton~time(trendTmpAngleton))
-linTrendBenbrook = lm(trendTmpBenbrook~time(trendTmpBenbrook))
-linTrendfortStockton = lm(trendTmpfortStockton~time(trendTmpfortStockton))
-linTrendMccook = lm(trendTmpMccook~time(trendTmpMccook))
+linTrendAngletonTemp = lm(trendTmpAngleton~time(trendTmpAngleton))
+linTrendBenbrookTemp = lm(trendTmpBenbrook~time(trendTmpBenbrook))
+linTrendfortStocktonTemp = lm(trendTmpfortStockton~time(trendTmpfortStockton))
+linTrendMccookTemp = lm(trendTmpMccook~time(trendTmpMccook))
 
 #plot trend of time series and compare linear regression with slope
 par(mfrow=c(1,1))
 plot(trendTmpAngleton)
-abline(linTrendAngleton, col="red")
-linTrendAngleton$coefficients[2]
+abline(linTrendAngletonTemp, col="red")
+linTrendAngletonTemp$coefficients[2]
 plot(trendTmpBenbrook)
-abline(linTrendBenbrook, col="red")
-linTrendBenbrook$coefficients[2]
+abline(linTrendBenbrookTemp, col="red")
+linTrendBenbrookTemp$coefficients[2]
 plot(trendTmpfortStockton)
-abline(linTrendfortStockton, col="red")
-linTrendfortStockton$coefficients[2]
+abline(linTrendfortStocktonTemp, col="red")
+linTrendfortStocktonTemp$coefficients[2]
 plot(trendTmpMccook)
-abline(linTrendMccook, col="red")
-linTrendMccook$coefficients[2]
+abline(linTrendMccookTemp, col="red")
+linTrendMccookTemp$coefficients[2]
