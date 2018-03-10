@@ -65,8 +65,8 @@ plot(vJanTmpMax2015)
 vJanTmpMax2015.fit = fit.variogram(vJanTmpMax2015, vgm(60, 'Gau', 9, 5))
 plot(vJanTmpMax2015 ,vJanTmpMax2015.fit)
 
-texas = map('state', 'texas')
-plot(JanTmpMax2015Locations, add=TRUE, pch=20)
+texas = map('state', 'texas', fill=TRUE)
+plot(JanTmpMax2015Locations, add=TRUE, pch=20, col="red")
 texas2 = data.frame(texas$x, texas$y)
 texas2 = na.omit(texas2)
 coordinates(texas2) = texas2[c(1,2)]
@@ -76,15 +76,16 @@ texasGrid = spsample(texas2, type="regular")
 map('state', 'texas')
 plot(texasGrid, add = T, pch=".")
 
+texasMap = map2SpatialPolygons(texas, ID=texas$names)
 
 JanTmpMax2015krige1 = krige(JanTmpMax2015Subset$TMAX ~ 1, JanTmpMax2015Subset, texasGrid, vJanTmpMax2015.fit) #ordinary kriging
-spplot(JanTmpMax2015krige1)
+spplot(JanTmpMax2015krige1, sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
 
 JanTmpMax2015krige2 = krige(JanTmpMax2015Subset$TMAX ~ 1, JanTmpMax2015Subset, texasGrid, vJanTmpMax2015.fit, beta=10.0) #same with simple kriging
-spplot(JanTmpMax2015krige2) #looks pretty much the same
+spplot(JanTmpMax2015krige2, sp.layout=list(texasMap, first=FALSE, lwd=2, col="white")) #looks pretty much the same
 
 JanTmpMax2015krige3 = krige(JanTmpMax2015Subset$TMAX ~ 1, JanTmpMax2015Subset, texasGrid, vJanTmpMax2015.fit, nmax=20) #ordinary kriging
-spplot(JanTmpMax2015krige3)
+spplot(JanTmpMax2015krige3, sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
 
 
 
@@ -117,7 +118,7 @@ plot(vAugTmpMax2015)
 vAugTmpMax2015.fit = fit.variogram(vAugTmpMax2015, vgm(60, 'Gau', 9, 5))
 plot(vAugTmpMax2015 ,vAugTmpMax2015.fit)
 
-texas = map('state', 'texas')
+texas = map('state', 'texas', fill=TRUE)
 plot(AugTmpMax2015Locations, add=TRUE, pch=20)
 texas2 = data.frame(texas$x, texas$y)
 texas2 = na.omit(texas2)
@@ -127,16 +128,16 @@ texasGrid = spsample(AugTmpMax2015Subset, type="regular")
 texasGrid = spsample(texas2, type="regular")
 map('state', 'texas')
 plot(texasGrid, add = T, pch=".")
-
+texasMap = map2SpatialPolygons(texas, ID=texas$names)
 
 AugTmpMax2015krige1 = krige(AugTmpMax2015Subset$TMAX ~ 1, AugTmpMax2015Subset, texasGrid, vAugTmpMax2015.fit) #ordinary kriging
-spplot(AugTmpMax2015krige1)
+spplot(AugTmpMax2015krige1, sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
 
 AugTmpMax2015krige2 = krige(AugTmpMax2015Subset$TMAX ~ 1, AugTmpMax2015Subset, texasGrid, vAugTmpMax2015.fit, beta=10.0) #simple kriging
-spplot(AugTmpMax2015krige2)
+spplot(AugTmpMax2015krige2, sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
 
 AugTmpMax2015krige3 = krige(AugTmpMax2015Subset$TMAX ~ 1, AugTmpMax2015Subset, texasGrid, vAugTmpMax2015.fit, nmax=20) #ordinary kriging
-spplot(AugTmpMax2015krige3)
+spplot(AugTmpMax2015krige3, sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
 
 
 
@@ -171,7 +172,7 @@ plot(vJanTmpMax2005)
 vJanTmpMax2005.fit = fit.variogram(vJanTmpMax2005, vgm(60, 'Gau', 9, 5))
 plot(vJanTmpMax2005 ,vJanTmpMax2005.fit)
 
-texas = map('state', 'texas')
+texas = map('state', 'texas', fill=TRUE)
 plot(JanTmpMax2005Locations, add=TRUE, pch=20)
 texas2 = data.frame(texas$x, texas$y)
 texas2 = na.omit(texas2)
@@ -181,16 +182,16 @@ texasGrid = spsample(JanTmpMax2005Subset, type="regular")
 texasGrid = spsample(texas2, type="regular")
 map('state', 'texas')
 plot(texasGrid, add = T, pch=".")
-
+texasMap = map2SpatialPolygons(texas, ID=texas$names)
 
 JanTmpMax2005krige1 = krige(JanTmpMax2005Subset$TMAX ~ 1, JanTmpMax2005Subset, texasGrid, vJanTmpMax2005.fit) #ordinary kriging
-spplot(JanTmpMax2005krige1)
+spplot(JanTmpMax2005krige1, sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
 
 JanTmpMax2005krige2 = krige(JanTmpMax2005Subset$TMAX ~ 1, JanTmpMax2005Subset, texasGrid, vJanTmpMax2005.fit, beta=10.0) #same with simple kriging
-spplot(JanTmpMax2005krige2) #looks pretty much the same
+spplot(JanTmpMax2005krige2, sp.layout=list(texasMap, first=FALSE, lwd=2, col="white")) #looks pretty much the same
 
 JanTmpMax2005krige3 = krige(JanTmpMax2005Subset$TMAX ~ 1, JanTmpMax2005Subset, texasGrid, vJanTmpMax2005.fit, nmax=20) #ordinary kriging
-spplot(JanTmpMax2005krige3)
+spplot(JanTmpMax2005krige3, sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
 
 
 
@@ -225,7 +226,7 @@ plot(vAugTmpMax2005)
 vAugTmpMax2005.fit = fit.variogram(vAugTmpMax2005, vgm(60, 'Gau', 9, 5))
 plot(vAugTmpMax2005 ,vAugTmpMax2005.fit)
 
-texas = map('state', 'texas')
+texas = map('state', 'texas', fill=TRUE)
 plot(AugTmpMax2005Locations, add=TRUE, pch=20)
 texas2 = data.frame(texas$x, texas$y)
 texas2 = na.omit(texas2)
@@ -235,16 +236,16 @@ texasGrid = spsample(AugTmpMax2005Subset, type="regular")
 texasGrid = spsample(texas2, type="regular")
 map('state', 'texas')
 plot(texasGrid, add = T, pch=".")
-
+texasMap = map2SpatialPolygons(texas, ID=texas$names)
 
 AugTmpMax2005krige1 = krige(AugTmpMax2005Subset$TMAX ~ 1, AugTmpMax2005Subset, texasGrid, vAugTmpMax2005.fit) #ordinary kriging
-spplot(AugTmpMax2005krige1)
+spplot(AugTmpMax2005krige1, sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
 
 AugTmpMax2005krige2 = krige(AugTmpMax2005Subset$TMAX ~ 1, AugTmpMax2005Subset, texasGrid, vAugTmpMax2005.fit, beta=10.0) #simple kriging
-spplot(AugTmpMax2005krige2)
+spplot(AugTmpMax2005krige2, sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
 
 AugTmpMax2005krige3 = krige(AugTmpMax2005Subset$TMAX ~ 1, AugTmpMax2005Subset, texasGrid, vAugTmpMax2005.fit, nmax=20) #ordinary kriging
-spplot(AugTmpMax2005krige3)
+spplot(AugTmpMax2005krige3, sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
 
 
 
@@ -279,7 +280,7 @@ plot(vJanTmpMax1995)
 vJanTmpMax1995.fit = fit.variogram(vJanTmpMax1995, vgm(60, 'Gau', 9, 5))
 plot(vJanTmpMax1995 ,vJanTmpMax1995.fit)
 
-texas = map('state', 'texas')
+texas = map('state', 'texas', fill=TRUE)
 plot(JanTmpMax1995Locations, add=TRUE, pch=20)
 texas2 = data.frame(texas$x, texas$y)
 texas2 = na.omit(texas2)
@@ -289,16 +290,16 @@ texasGrid = spsample(JanTmpMax1995Subset, type="regular")
 texasGrid = spsample(texas2, type="regular")
 map('state', 'texas')
 plot(texasGrid, add = T, pch=".")
-
+texasMap = map2SpatialPolygons(texas, ID=texas$names)
 
 JanTmpMax1995krige1 = krige(JanTmpMax1995Subset$TMAX ~ 1, JanTmpMax1995Subset, texasGrid, vJanTmpMax1995.fit) #ordinary kriging
-spplot(JanTmpMax1995krige1)
+spplot(JanTmpMax1995krige1, sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
 
 JanTmpMax1995krige2 = krige(JanTmpMax1995Subset$TMAX ~ 1, JanTmpMax1995Subset, texasGrid, vJanTmpMax1995.fit, beta=10.0) #same with simple kriging
-spplot(JanTmpMax1995krige2) #looks pretty much the same
+spplot(JanTmpMax1995krige2, sp.layout=list(texasMap, first=FALSE, lwd=2, col="white")) #looks pretty much the same
 
 JanTmpMax1995krige3 = krige(JanTmpMax1995Subset$TMAX ~ 1, JanTmpMax1995Subset, texasGrid, vJanTmpMax1995.fit, nmax=20) #ordinary kriging
-spplot(JanTmpMax1995krige3)
+spplot(JanTmpMax1995krige3, sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
 
 
 
@@ -333,7 +334,7 @@ plot(vAugTmpMax1995)
 vAugTmpMax1995.fit = fit.variogram(vAugTmpMax1995, vgm(60, 'Gau', 9, 5))
 plot(vAugTmpMax1995 ,vAugTmpMax1995.fit)
 
-texas = map('state', 'texas')
+texas = map('state', 'texas', fill=TRUE)
 plot(AugTmpMax1995Locations, add=TRUE, pch=20)
 texas2 = data.frame(texas$x, texas$y)
 texas2 = na.omit(texas2)
@@ -343,16 +344,16 @@ texasGrid = spsample(AugTmpMax1995Subset, type="regular")
 texasGrid = spsample(texas2, type="regular")
 map('state', 'texas')
 plot(texasGrid, add = T, pch=".")
-
+texasMap = map2SpatialPolygons(texas, ID=texas$names)
 
 AugTmpMax1995krige1 = krige(AugTmpMax1995Subset$TMAX ~ 1, AugTmpMax1995Subset, texasGrid, vAugTmpMax1995.fit) #ordinary kriging
-spplot(AugTmpMax1995krige1)
+spplot(AugTmpMax1995krige1, sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
 
 AugTmpMax1995krige2 = krige(AugTmpMax1995Subset$TMAX ~ 1, AugTmpMax1995Subset, texasGrid, vAugTmpMax1995.fit, beta=10.0) #simple kriging
-spplot(AugTmpMax1995krige2)
+spplot(AugTmpMax1995krige2, sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
 
 AugTmpMax1995krige3 = krige(AugTmpMax1995Subset$TMAX ~ 1, AugTmpMax1995Subset, texasGrid, vAugTmpMax1995.fit, nmax=20) #ordinary kriging
-spplot(AugTmpMax1995krige3)
+spplot(AugTmpMax1995krige3, sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
 
 
 
@@ -387,7 +388,7 @@ plot(vJanTmpMax1985)
 vJanTmpMax1985.fit = fit.variogram(vJanTmpMax1985, vgm(60, 'Gau', 9, 5))
 plot(vJanTmpMax1985 ,vJanTmpMax1985.fit)
 
-texas = map('state', 'texas')
+texas = map('state', 'texas', fill=TRUE)
 plot(JanTmpMax1985Locations, add=TRUE, pch=20)
 texas2 = data.frame(texas$x, texas$y)
 texas2 = na.omit(texas2)
@@ -397,16 +398,16 @@ texasGrid = spsample(JanTmpMax1985Subset, type="regular")
 texasGrid = spsample(texas2, type="regular")
 map('state', 'texas')
 plot(texasGrid, add = T, pch=".")
-
+texasMap = map2SpatialPolygons(texas, ID=texas$names)
 
 JanTmpMax1985krige1 = krige(JanTmpMax1985Subset$TMAX ~ 1, JanTmpMax1985Subset, texasGrid, vJanTmpMax1985.fit) #ordinary kriging
-spplot(JanTmpMax1985krige1)
+spplot(JanTmpMax1985krige1, sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
 
 JanTmpMax1985krige2 = krige(JanTmpMax1985Subset$TMAX ~ 1, JanTmpMax1985Subset, texasGrid, vJanTmpMax1985.fit, beta=10.0) #same with simple kriging
-spplot(JanTmpMax1985krige2) #looks pretty much the same
+spplot(JanTmpMax1985krige2, sp.layout=list(texasMap, first=FALSE, lwd=2, col="white")) #looks pretty much the same
 
 JanTmpMax1985krige3 = krige(JanTmpMax1985Subset$TMAX ~ 1, JanTmpMax1985Subset, texasGrid, vJanTmpMax1985.fit, nmax=20) #ordinary kriging
-spplot(JanTmpMax1985krige3)
+spplot(JanTmpMax1985krige3, sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
 
 
 
@@ -441,7 +442,7 @@ plot(vAugTmpMax1985)
 vAugTmpMax1985.fit = fit.variogram(vAugTmpMax1985, vgm(60, 'Gau', 9, 5))
 plot(vAugTmpMax1985 ,vAugTmpMax1985.fit)
 
-texas = map('state', 'texas')
+texas = map('state', 'texas', fill=TRUE)
 plot(AugTmpMax1985Locations, add=TRUE, pch=20)
 texas2 = data.frame(texas$x, texas$y)
 texas2 = na.omit(texas2)
@@ -451,16 +452,16 @@ texasGrid = spsample(AugTmpMax1985Subset, type="regular")
 texasGrid = spsample(texas2, type="regular")
 map('state', 'texas')
 plot(texasGrid, add = T, pch=".")
-
+texasMap = map2SpatialPolygons(texas, ID=texas$names)
 
 AugTmpMax1985krige1 = krige(AugTmpMax1985Subset$TMAX ~ 1, AugTmpMax1985Subset, texasGrid, vAugTmpMax1985.fit) #ordinary kriging
-spplot(AugTmpMax1985krige1)
+spplot(AugTmpMax1985krige1, sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
 
 AugTmpMax1985krige2 = krige(AugTmpMax1985Subset$TMAX ~ 1, AugTmpMax1985Subset, texasGrid, vAugTmpMax1985.fit, beta=10.0) #simple kriging
-spplot(AugTmpMax1985krige2)
+spplot(AugTmpMax1985krige2, sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
 
 AugTmpMax1985krige3 = krige(AugTmpMax1985Subset$TMAX ~ 1, AugTmpMax1985Subset, texasGrid, vAugTmpMax1985.fit, nmax=20) #ordinary kriging
-spplot(AugTmpMax1985krige3)
+spplot(AugTmpMax1985krige3, sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
 
 
 
@@ -495,7 +496,7 @@ plot(vJanTmpMax1975)
 vJanTmpMax1975.fit = fit.variogram(vJanTmpMax1975, vgm(60, 'Gau', 9, 5))
 plot(vJanTmpMax1975 ,vJanTmpMax1975.fit)
 
-texas = map('state', 'texas')
+texas = map('state', 'texas', fill=TRUE)
 plot(JanTmpMax1975Locations, add=TRUE, pch=20)
 texas2 = data.frame(texas$x, texas$y)
 texas2 = na.omit(texas2)
@@ -505,16 +506,16 @@ texasGrid = spsample(JanTmpMax1975Subset, type="regular")
 texasGrid = spsample(texas2, type="regular")
 map('state', 'texas')
 plot(texasGrid, add = T, pch=".")
-
+texasMap = map2SpatialPolygons(texas, ID=texas$names)
 
 JanTmpMax1975krige1 = krige(JanTmpMax1975Subset$TMAX ~ 1, JanTmpMax1975Subset, texasGrid, vJanTmpMax1975.fit) #ordinary kriging
-spplot(JanTmpMax1975krige1)
+spplot(JanTmpMax1975krige1, sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
 
 JanTmpMax1975krige2 = krige(JanTmpMax1975Subset$TMAX ~ 1, JanTmpMax1975Subset, texasGrid, vJanTmpMax1975.fit, beta=10.0) #same with simple kriging
-spplot(JanTmpMax1975krige2) #looks pretty much the same
+spplot(JanTmpMax1975krige2, sp.layout=list(texasMap, first=FALSE, lwd=2, col="white")) #looks pretty much the same
 
 JanTmpMax1975krige3 = krige(JanTmpMax1975Subset$TMAX ~ 1, JanTmpMax1975Subset, texasGrid, vJanTmpMax1975.fit, nmax=20) #ordinary kriging
-spplot(JanTmpMax1975krige3)
+spplot(JanTmpMax1975krige3, sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
 
 
 
@@ -549,7 +550,7 @@ plot(vAugTmpMax1975)
 vAugTmpMax1975.fit = fit.variogram(vAugTmpMax1975, vgm(60, 'Gau', 9, 5))
 plot(vAugTmpMax1975 ,vAugTmpMax1975.fit)
 
-texas = map('state', 'texas')
+texas = map('state', 'texas', fill=TRUE)
 plot(AugTmpMax1975Locations, add=TRUE, pch=20)
 texas2 = data.frame(texas$x, texas$y)
 texas2 = na.omit(texas2)
@@ -559,16 +560,16 @@ texasGrid = spsample(AugTmpMax1975Subset, type="regular")
 texasGrid = spsample(texas2, type="regular")
 map('state', 'texas')
 plot(texasGrid, add = T, pch=".")
-
+texasMap = map2SpatialPolygons(texas, ID=texas$names)
 
 AugTmpMax1975krige1 = krige(AugTmpMax1975Subset$TMAX ~ 1, AugTmpMax1975Subset, texasGrid, vAugTmpMax1975.fit) #ordinary kriging
-spplot(AugTmpMax1975krige1)
+spplot(AugTmpMax1975krige1, sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
 
 AugTmpMax1975krige2 = krige(AugTmpMax1975Subset$TMAX ~ 1, AugTmpMax1975Subset, texasGrid, vAugTmpMax1975.fit, beta=10.0) #simple kriging
-spplot(AugTmpMax1975krige2)
+spplot(AugTmpMax1975krige2, sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
 
 AugTmpMax1975krige3 = krige(AugTmpMax1975Subset$TMAX ~ 1, AugTmpMax1975Subset, texasGrid, vAugTmpMax1975.fit, nmax=20) #ordinary kriging
-spplot(AugTmpMax1975krige3)
+spplot(AugTmpMax1975krige3, sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
 
 
 
@@ -603,7 +604,7 @@ plot(vJanTmpMax1965)
 vJanTmpMax1965.fit = fit.variogram(vJanTmpMax1965, vgm(60, 'Gau', 9, 5))
 plot(vJanTmpMax1965 ,vJanTmpMax1965.fit)
 
-texas = map('state', 'texas')
+texas = map('state', 'texas', fill=TRUE)
 plot(JanTmpMax1965Locations, add=TRUE, pch=20)
 texas2 = data.frame(texas$x, texas$y)
 texas2 = na.omit(texas2)
@@ -613,16 +614,16 @@ texasGrid = spsample(JanTmpMax1965Subset, type="regular")
 texasGrid = spsample(texas2, type="regular")
 map('state', 'texas')
 plot(texasGrid, add = T, pch=".")
-
+texasMap = map2SpatialPolygons(texas, ID=texas$names)
 
 JanTmpMax1965krige1 = krige(JanTmpMax1965Subset$TMAX ~ 1, JanTmpMax1965Subset, texasGrid, vJanTmpMax1965.fit) #ordinary kriging
-spplot(JanTmpMax1965krige1)
+spplot(JanTmpMax1965krige1, sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
 
 JanTmpMax1965krige2 = krige(JanTmpMax1965Subset$TMAX ~ 1, JanTmpMax1965Subset, texasGrid, vJanTmpMax1965.fit, beta=10.0) #same with simple kriging
-spplot(JanTmpMax1965krige2) #looks pretty much the same
+spplot(JanTmpMax1965krige2, sp.layout=list(texasMap, first=FALSE, lwd=2, col="white")) #looks pretty much the same
 
 JanTmpMax1965krige3 = krige(JanTmpMax1965Subset$TMAX ~ 1, JanTmpMax1965Subset, texasGrid, vJanTmpMax1965.fit, nmax=20) #ordinary kriging
-spplot(JanTmpMax1965krige3)
+spplot(JanTmpMax1965krige3, sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
 
 
 
@@ -657,7 +658,7 @@ plot(vAugTmpMax1965)
 vAugTmpMax1965.fit = fit.variogram(vAugTmpMax1965, vgm(60, 'Gau', 9, 5))
 plot(vAugTmpMax1965 ,vAugTmpMax1965.fit)
 
-texas = map('state', 'texas')
+texas = map('state', 'texas', fill=TRUE)
 plot(AugTmpMax1965Locations, add=TRUE, pch=20)
 texas2 = data.frame(texas$x, texas$y)
 texas2 = na.omit(texas2)
@@ -667,16 +668,16 @@ texasGrid = spsample(AugTmpMax1965Subset, type="regular")
 texasGrid = spsample(texas2, type="regular")
 map('state', 'texas')
 plot(texasGrid, add = T, pch=".")
-
+texasMap = map2SpatialPolygons(texas, ID=texas$names)
 
 AugTmpMax1965krige1 = krige(AugTmpMax1965Subset$TMAX ~ 1, AugTmpMax1965Subset, texasGrid, vAugTmpMax1965.fit) #ordinary kriging
-spplot(AugTmpMax1965krige1)
+spplot(AugTmpMax1965krige1, sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
 
 AugTmpMax1965krige2 = krige(AugTmpMax1965Subset$TMAX ~ 1, AugTmpMax1965Subset, texasGrid, vAugTmpMax1965.fit, beta=10.0) #simple kriging
-spplot(AugTmpMax1965krige2)
+spplot(AugTmpMax1965krige2, sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
 
 AugTmpMax1965krige3 = krige(AugTmpMax1965Subset$TMAX ~ 1, AugTmpMax1965Subset, texasGrid, vAugTmpMax1965.fit, nmax=20) #ordinary kriging
-spplot(AugTmpMax1965krige3)
+spplot(AugTmpMax1965krige3, sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
 
 
 
@@ -711,7 +712,7 @@ plot(vJanTmpMax1955)
 vJanTmpMax1955.fit = fit.variogram(vJanTmpMax1955, vgm(60, 'Gau', 9, 5))
 plot(vJanTmpMax1955 ,vJanTmpMax1955.fit)
 
-texas = map('state', 'texas')
+texas = map('state', 'texas', fill=TRUE)
 plot(JanTmpMax1955Locations, add=TRUE, pch=20)
 texas2 = data.frame(texas$x, texas$y)
 texas2 = na.omit(texas2)
@@ -721,16 +722,16 @@ texasGrid = spsample(JanTmpMax1955Subset, type="regular")
 texasGrid = spsample(texas2, type="regular")
 map('state', 'texas')
 plot(texasGrid, add = T, pch=".")
-
+texasMap = map2SpatialPolygons(texas, ID=texas$names)
 
 JanTmpMax1955krige1 = krige(JanTmpMax1955Subset$TMAX ~ 1, JanTmpMax1955Subset, texasGrid, vJanTmpMax1955.fit) #ordinary kriging
-spplot(JanTmpMax1955krige1)
+spplot(JanTmpMax1955krige1, sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
 
 JanTmpMax1955krige2 = krige(JanTmpMax1955Subset$TMAX ~ 1, JanTmpMax1955Subset, texasGrid, vJanTmpMax1955.fit, beta=10.0) #same with simple kriging
-spplot(JanTmpMax1955krige2) #looks pretty much the same
+spplot(JanTmpMax1955krige2, sp.layout=list(texasMap, first=FALSE, lwd=2, col="white")) #looks pretty much the same
 
 JanTmpMax1955krige3 = krige(JanTmpMax1955Subset$TMAX ~ 1, JanTmpMax1955Subset, texasGrid, vJanTmpMax1955.fit, nmax=20) #ordinary kriging
-spplot(JanTmpMax1955krige3)
+spplot(JanTmpMax1955krige3, sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
 
 
 
@@ -765,7 +766,7 @@ plot(vAugTmpMax1955)
 vAugTmpMax1955.fit = fit.variogram(vAugTmpMax1955, vgm(60, 'Gau', 9, 5))
 plot(vAugTmpMax1955 ,vAugTmpMax1955.fit)
 
-texas = map('state', 'texas')
+texas = map('state', 'texas', fill=TRUE)
 plot(AugTmpMax1955Locations, add=TRUE, pch=20)
 texas2 = data.frame(texas$x, texas$y)
 texas2 = na.omit(texas2)
@@ -775,16 +776,16 @@ texasGrid = spsample(AugTmpMax1955Subset, type="regular")
 texasGrid = spsample(texas2, type="regular")
 map('state', 'texas')
 plot(texasGrid, add = T, pch=".")
-
+texasMap = map2SpatialPolygons(texas, ID=texas$names)
 
 AugTmpMax1955krige1 = krige(AugTmpMax1955Subset$TMAX ~ 1, AugTmpMax1955Subset, texasGrid, vAugTmpMax1955.fit) #ordinary kriging
-spplot(AugTmpMax1955krige1)
+spplot(AugTmpMax1955krige1, sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
 
 AugTmpMax1955krige2 = krige(AugTmpMax1955Subset$TMAX ~ 1, AugTmpMax1955Subset, texasGrid, vAugTmpMax1955.fit, beta=10.0) #simple kriging
-spplot(AugTmpMax1955krige2)
+spplot(AugTmpMax1955krige2, sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
 
 AugTmpMax1955krige3 = krige(AugTmpMax1955Subset$TMAX ~ 1, AugTmpMax1955Subset, texasGrid, vAugTmpMax1955.fit, nmax=20) #ordinary kriging
-spplot(AugTmpMax1955krige3)
+spplot(AugTmpMax1955krige3, sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
 
 
 
@@ -819,7 +820,7 @@ plot(vJanTmpMax1945)
 vJanTmpMax1945.fit = fit.variogram(vJanTmpMax1945, vgm(60, 'Gau', 9, 5))
 plot(vJanTmpMax1945 ,vJanTmpMax1945.fit)
 
-texas = map('state', 'texas')
+texas = map('state', 'texas', fill=TRUE)
 plot(JanTmpMax1945Locations, add=TRUE, pch=20)
 texas2 = data.frame(texas$x, texas$y)
 texas2 = na.omit(texas2)
@@ -829,16 +830,16 @@ texasGrid = spsample(JanTmpMax1945Subset, type="regular")
 texasGrid = spsample(texas2, type="regular")
 map('state', 'texas')
 plot(texasGrid, add = T, pch=".")
-
+texasMap = map2SpatialPolygons(texas, ID=texas$names)
 
 JanTmpMax1945krige1 = krige(JanTmpMax1945Subset$TMAX ~ 1, JanTmpMax1945Subset, texasGrid, vJanTmpMax1945.fit) #ordinary kriging
-spplot(JanTmpMax1945krige1)
+spplot(JanTmpMax1945krige1, sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
 
 JanTmpMax1945krige2 = krige(JanTmpMax1945Subset$TMAX ~ 1, JanTmpMax1945Subset, texasGrid, vJanTmpMax1945.fit, beta=10.0) #same with simple kriging
-spplot(JanTmpMax1945krige2) #looks pretty much the same
+spplot(JanTmpMax1945krige2, sp.layout=list(texasMap, first=FALSE, lwd=2, col="white")) #looks pretty much the same
 
 JanTmpMax1945krige3 = krige(JanTmpMax1945Subset$TMAX ~ 1, JanTmpMax1945Subset, texasGrid, vJanTmpMax1945.fit, nmax=20) #ordinary kriging
-spplot(JanTmpMax1945krige3)
+spplot(JanTmpMax1945krige3, sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
 
 
 
@@ -873,7 +874,7 @@ plot(vAugTmpMax1945)
 vAugTmpMax1945.fit = fit.variogram(vAugTmpMax1945, vgm(60, 'Gau', 9, 5))
 plot(vAugTmpMax1945 ,vAugTmpMax1945.fit)
 
-texas = map('state', 'texas')
+texas = map('state', 'texas', fill=TRUE)
 plot(AugTmpMax1945Locations, add=TRUE, pch=20)
 texas2 = data.frame(texas$x, texas$y)
 texas2 = na.omit(texas2)
@@ -883,13 +884,13 @@ texasGrid = spsample(AugTmpMax1945Subset, type="regular")
 texasGrid = spsample(texas2, type="regular")
 map('state', 'texas')
 plot(texasGrid, add = T, pch=".")
-
+texasMap = map2SpatialPolygons(texas, ID=texas$names)
 
 AugTmpMax1945krige1 = krige(AugTmpMax1945Subset$TMAX ~ 1, AugTmpMax1945Subset, texasGrid, vAugTmpMax1945.fit) #ordinary kriging
-spplot(AugTmpMax1945krige1)
+spplot(AugTmpMax1945krige1, sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
 
 AugTmpMax1945krige2 = krige(AugTmpMax1945Subset$TMAX ~ 1, AugTmpMax1945Subset, texasGrid, vAugTmpMax1945.fit, beta=10.0) #simple kriging
-spplot(AugTmpMax1945krige2)
+spplot(AugTmpMax1945krige2, sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
 
 AugTmpMax1945krige3 = krige(AugTmpMax1945Subset$TMAX ~ 1, AugTmpMax1945Subset, texasGrid, vAugTmpMax1945.fit, nmax=20) #ordinary kriging
-spplot(AugTmpMax1945krige3)
+spplot(AugTmpMax1945krige3, sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
