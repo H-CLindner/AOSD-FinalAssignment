@@ -1,0 +1,39 @@
+---
+title: "Manifestation of the climate change in Texas over the past 70 years"
+author: "Hans-Christian Lindner"
+institute: "Institute for Geoinformatics"
+city: "Münster, Germany"
+e-mail: "h_lind04@uni-muenster.de"
+date: "17th of March 2018"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Abstract
+
+We know about the climate change and it's consequences since many years and a lot of research has been done in this field. The climate is a complex system compound of different elements like temperature, precipitation or wind. This paper aims to analyse the power of the climate change regarding these elements on the example of Texas. The effects of the climate change on air temperature, precipitation, wind speed and evaporation will be investigated. By analysing time series and kriging interpolations of data from weather stations across the state it showed out, that there is a remarkable climate change. The temperature is rising, precipitation becomes weaker, wind speed intensifies and evaporaation gets stronger. This paper gives another hint of the climate change and together with other examples we should take future political decisions with respect to this.
+
+## Introduction
+
+Since Charles David Keeling presented his findings of an increase in the concentration of carbon dioxide in Earth's atmosphere people started believing in a human influenced climate change (Keeling Quelle). Before that it was known that there is a natural variability in the Earth's climate with changes into both extremes, cold and warm, over the last 800.000 years (variablity quelle). Based on Keelings data and other climatic investigations it became clear that the current global warming is strongly human-induced. With that knowledge many started investigating the impact of the climate change on natural and human environment. Above all the IPCC, the International Panel on Climate Change, provides information about the human-induced climate change, the risks and consequences of it and the possibilities of a climate mitigation (IPCC Website). The summarized findings of their researcher groups show that there is a remarkable rise of temperature and a lot of signficant changes in physical and biological systems in all parts of the earth (Paper 2007). They also show how the human is involved in this by producing greenhouse gases and strengthen the climate change (IPCC paper). To show how the climate change effects some of the most important climate elements: air temperature, precipitation, wind speed and evaporation 
+
+## Data
+
+## Methods
+
+## Results
+
+## Discussion
+
+## Conclusion
+
+## References
+
+
+```{r}
+
+```
+
