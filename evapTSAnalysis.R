@@ -9,217 +9,193 @@ library("plyr")
 library("forecast")
 setwd("C:/Users/hans-/Documents/Master/1.Semester/ASTD/FinalAssignment/data")
 
+createEvapIndexEvap = function(rawData){
+  rawDataIndex = rawData$DATE
+  rawDataIndex.date = as.Date(rawDataIndex)
+  return(rawDataIndex.date)
+}
+
+fillMissingDatesEvap = function(dates, dataFrame){
+  dateRange = seq(min(dates), max(dates), by = 1)
+  allDates = data.frame(dateRange)
+  allDates = rename(allDates, replace = c("dateRange" = "DATE"))
+  dataFrame = merge(dataFrame, allDates, all=TRUE)
+  dataFrame = dataFrame[!duplicated(dataFrame$DATE),]
+  return(dataFrame)
+}
+
+deleteNAsEvap = function(frame){
+  if(sum(is.na(frame)) > 0){
+    frame = na.approx(frame)
+  } else {
+    print("no NA's")
+  }
+}
+
+tsTrendEvap = function(start, dataFrame){
+  EvapTS = ts(dataFrame$EVAP, start=start, frequency=365.25)
+  EvapTS = na.approx(EvapTS)
+  stlEvapTS = stl(EvapTS, s.window = "periodic")
+  trendEvapTS = stlEvapTS$time.series[,2]
+  return(trendEvapTS)
+}
+
+forecastEvap = function(xtsEvap){
+  arimaEvap = auto.arima(xtsEvap)
+  fcastEvap = forecast(arimaEvap, h=100)
+  return(fcastEvap)
+}
+
+statisticsEvap = function(xtsEvap){
+  mean = mean(xtsEvap)
+  sd = sd(xtsEvap)
+  min = min(xtsEvap)
+  max = max(xtsEvap)
+  var = var(xtsEvap)
+  median = median(xtsEvap)
+  firstQuartile = quantile(xtsEvap, 0.25)
+  thirdQuartile = quantile(xtsEvap, 0.75)
+  statistics = data.frame(mean, sd, min, max, var, median, firstQuartile, thirdQuartile)
+  return(statistics)
+}
+
 # Angleton, Texas in the South East near Houston
 # Evaporation timeseries for Angleton in the SouthEast of Texas
 angletonEvap = read_xlsx("timeseries/Angleton, SE/Angleton, Evap.xlsx")
+angletonEvapIndex = createEvapIndexEvap(angletonEvap)
 
-angletonEvapIndex = (1953 + angletonEvap$DATE)
-angletonEvapIndex.date = as.Date(angletonEvapIndex)
+#fill missing dates
+angletonEvap = fillMissingDatesEvap(angletonEvapIndex, angletonEvap)
 
-#to be sure that there are no missing dates in the data frame, take the first and last entry and merge the data frames; fill missing dates with NA and interpolate later
-DateRangeAngletonEvap = seq(min(angletonEvapIndex.date), max(angletonEvapIndex.date), by = 1)
-allDatesAngletonEvap = data.frame(DateRangeAngletonEvap)
-allDatesAngletonEvap = rename(allDatesAngletonEvap, replace = c("DateRangeAngletonEvap" = "DATE"))
-angletonEvap = merge(angletonEvap, allDatesAngletonEvap, all=TRUE)
-angletonEvap = angletonEvap[!duplicated(angletonEvap$DATE),]
+#create an xts object
+angletonEvapIndex = createEvapIndexEvap(angletonEvap)
+EvapAngleton = xts(angletonEvap$EVAP, angletonEvapIndex)
 
-#create an xts object out of the data frame for temperature
-angletonEvapIndex = (1953 + angletonEvap$DATE)
-angletonEvapIndex.date = as.Date(angletonEvapIndex)
-evapAngleton = xts(angletonEvap$EVAP, angletonEvapIndex.date)
+#delete NA's
+EvapAngleton = deleteNAsEvap(EvapAngleton)
 
-#if there are NA's, interpolate their value
-if(sum(is.na(evapAngleton)) > 0){
-  evapAngleton = na.approx(evapAngleton)
-} else {
-  print("no NA's")
-}
-
-plot(evapAngleton)
+#plot
+plot(EvapAngleton)
 
 #plot acf and pacf of the timeseries
-acfAngletonEvap = acf(evapAngleton, lag.max = 365)
-pacfAngletonEvap = pacf(evapAngleton)
+acfAngletonEvap = acf(EvapAngleton, lag.max = 365)
+pacfAngletonEvap = pacf(EvapAngleton)
 
-#make a ts object out of the xts object
-start = as.Date("1953-01-01") 
-evapAngleton2 = ts(angletonEvap$EVAP, start=start, frequency = 365.25)
-evapAngleton2 = na.approx(evapAngleton2)
-stlAngletonEvap = stl(evapAngleton2, s.window="periodic")
-trendEvapAngleton = stlAngletonEvap$time.series[,2]
+#create trend
+start = as.Date("1953-01-01")
+trendEvapAngleton = tsTrendEvap(start, angletonEvap)
 
 #forecast
-arimaEvapAngleton = auto.arima(evapAngleton)
-fcastEvapAngleton = forecast(arimaEvapAngleton, h=100)
-plot(fcastEvapAngleton, include=500)
+fcastEvapAngleton = forecastEvap(EvapAngleton)
 
-meanEvapAngleton = mean(evapAngleton)
-sdEvapAngleton = sd(evapAngleton)
-minEvapAngleton = min(evapAngleton)
-maxEvapAngleton = max(evapAngleton)
-varEvapAngleton = var(evapAngleton)
-
-
+#statistics
+statisticsAngletonEvap = statisticsEvap(EvapAngleton)
 
 
 # Benbrook Dam, Texas in the North East near Dallas
 # Evaporation timeseries for Benbrook in the NorthEast of Texas
-benbrookEvap = read_xlsx("timeseries/Benbrook, NE/Benbrook, Evap.xlsx")
+BenbrookEvap = read_xlsx("timeseries/Benbrook, NE/Benbrook, Evap.xlsx")
+BenbrookEvapIndex = createEvapIndexEvap(BenbrookEvap)
 
-benbrookEvapIndex = (1979 + benbrookEvap$DATE)
-benbrookEvapIndex.date = as.Date(benbrookEvapIndex)
+#fill missing dates
+BenbrookEvap = fillMissingDatesEvap(BenbrookEvapIndex, BenbrookEvap)
 
-#to be sure that there are no missing dates in the data frame, take the first and last entry and merge the data frames; fill missing dates with NA and interpolate later
-DateRangeBenbrookEvap = seq(min(benbrookEvapIndex.date), max(benbrookEvapIndex.date), by = 1)
-allDatesBenbrookEvap = data.frame(DateRangeBenbrookEvap)
-allDatesBenbrookEvap = rename(allDatesBenbrookEvap, replace = c("DateRangeBenbrookEvap" = "DATE"))
-benbrookEvap = merge(benbrookEvap, allDatesBenbrookEvap, all=TRUE)
-benbrookEvap = benbrookEvap[!duplicated(benbrookEvap$DATE),]
+#create an xts object
+BenbrookEvapIndex = createEvapIndexEvap(BenbrookEvap)
+EvapBenbrook = xts(BenbrookEvap$EVAP, BenbrookEvapIndex)
 
-#create an xts object out of the data frame for temperature
-benbrookEvapIndex = (1979 + benbrookEvap$DATE)
-benbrookEvapIndex.date = as.Date(benbrookEvapIndex)
-evapBenbrook = xts(benbrookEvap$EVAP, benbrookEvapIndex.date)
+#delete NA's
+EvapBenbrook = deleteNAsEvap(EvapBenbrook)
 
-#if there are NA's, interpolate their value
-if(sum(is.na(evapBenbrook)) > 0){
-  evapBenbrook = na.approx(evapBenbrook)
-} else {
-  print("no NA's")
-}
-
-plot(evapBenbrook)
+#plot
+plot(EvapBenbrook)
 
 #plot acf and pacf of the timeseries
-acfBenbrookEvap = acf(evapBenbrook, lag.max = 365)
-pacfBenbrookEvap = pacf(evapBenbrook)
+acfBenbrookEvap = acf(EvapBenbrook, lag.max = 365)
+pacfBenbrookEvap = pacf(EvapBenbrook)
 
-#make a ts object out of the xts object
-start = as.Date("1979-01-18") 
-evapBenbrook2 = ts(benbrookEvap$EVAP, start=start, frequency = 365.25)
-evapBenbrook2 = na.approx(evapBenbrook2)
-stlBenbrookEvap = stl(evapBenbrook2, s.window="periodic")
-trendEvapBenbrook = stlBenbrookEvap$time.series[,2]
+#create trend
+start = as.Date("1953-01-01")
+trendEvapBenbrook = tsTrendEvap(start, BenbrookEvap)
 
 #forecast
-arimaEvapBenbrook = auto.arima(evapBenbrook)
-fcastEvapBenbrook = forecast(arimaEvapBenbrook, h=100)
-plot(fcastEvapBenbrook, include=500)
+fcastEvapBenbrook = forecastEvap(EvapBenbrook)
 
-meanEvapBenbrook = mean(evapBenbrook)
-sdEvapBenbrook = sd(evapBenbrook)
-minEvapBenbrook = min(evapBenbrook)
-maxEvapBenbrook = max(evapBenbrook)
-varEvapBenbrook = var(evapBenbrook)
+#statistics
+statisticsBenbrookEvap = statisticsEvap(EvapBenbrook)
 
 
 
 # Fort Stockton, Texas in the North West near the border to New Mexico
 # Evaporation timeseries for Fort Stockton in the NorthWest of Texas
-fortStocktonEvap = read_xlsx("timeseries/FortStockton, NW/FortStockton, Evap.xlsx")
+fortStocktonEvap = read_xlsx("timeseries/fortStockton, NW/fortStockton, Evap.xlsx")
+fortStocktonEvapIndex = createEvapIndexEvap(fortStocktonEvap)
 
-fortStocktonEvapIndex = (1950 + fortStocktonEvap$DATE)
-fortStocktonEvapIndex.date = as.Date(fortStocktonEvapIndex)
+#fill missing dates
+fortStocktonEvap = fillMissingDatesEvap(fortStocktonEvapIndex, fortStocktonEvap)
 
-#to be sure that there are no missing dates in the data frame, take the first and last entry and merge the data frames; fill missing dates with NA and interpolate later
-DateRangefortStocktonEvap = seq(min(fortStocktonEvapIndex.date), max(fortStocktonEvapIndex.date), by = 1)
-allDatesfortStocktonEvap = data.frame(DateRangefortStocktonEvap)
-allDatesfortStocktonEvap = rename(allDatesfortStocktonEvap, replace = c("DateRangefortStocktonEvap" = "DATE"))
-fortStocktonEvap = merge(fortStocktonEvap, allDatesfortStocktonEvap, all=TRUE)
-fortStocktonEvap = fortStocktonEvap[!duplicated(fortStocktonEvap$DATE),]
+#create an xts object
+fortStocktonEvapIndex = createEvapIndexEvap(fortStocktonEvap)
+EvapfortStockton = xts(fortStocktonEvap$EVAP, fortStocktonEvapIndex)
 
-#create an xts object out of the data frame for temperature
-fortStocktonEvapIndex = (1950 + fortStocktonEvap$DATE)
-fortStocktonEvapIndex.date = as.Date(fortStocktonEvapIndex)
-evapfortStockton = xts(fortStocktonEvap$EVAP, fortStocktonEvapIndex.date)
+#delete NA's
+EvapfortStockton = deleteNAsEvap(EvapfortStockton)
 
-#if there are NA's, interpolate their value
-if(sum(is.na(evapfortStockton)) > 0){
-  evapfortStockton = na.approx(evapfortStockton)
-} else {
-  print("no NA's")
-}
-
-plot(evapfortStockton)
+#plot
+plot(EvapfortStockton)
 
 #plot acf and pacf of the timeseries
-acffortStocktonEvap = acf(evapfortStockton, lag.max = 365)
-pacffortStocktonEvap = pacf(evapfortStockton)
+acffortStocktonEvap = acf(EvapfortStockton, lag.max = 365)
+pacffortStocktonEvap = pacf(EvapfortStockton)
 
-#make a ts object out of the xts object
-start = as.Date("1950-01-01") 
-evapfortStockton2 = ts(fortStocktonEvap$EVAP, start=start, frequency = 365.25)
-evapfortStockton2 = na.approx(evapfortStockton2)
-stlfortStocktonEvap = stl(evapfortStockton2, s.window="periodic")
-trendEvapfortStockton = stlfortStocktonEvap$time.series[,2]
+#create trend
+start = as.Date("1953-01-01")
+trendEvapfortStockton = tsTrendEvap(start, fortStocktonEvap)
 
 #forecast
-arimaEvapfortStockton = auto.arima(evapfortStockton)
-fcastEvapfortStockton = forecast(arimaEvapfortStockton, h=100)
-plot(fcastEvapfortStockton, include=500)
+fcastEvapfortStockton = forecastEvap(EvapfortStockton)
 
-meanEvapfortStockton = mean(evapfortStockton)
-sdEvapfortStockton = sd(evapfortStockton)
-minEvapfortStockton = min(evapfortStockton)
-maxEvapfortStockton = max(evapfortStockton)
-varEvapfortStockton = var(evapfortStockton)
+#statistics
+statisticsfortStocktonEvap = statisticsEvap(EvapfortStockton)
 
 
 
 # Mccook, Texas in the South West near the coast of the Golf of Mexico and the Mexican border
 # Evaporation timeseries for Mccook in the South West of Texas
-mccookEvap = read_xlsx("timeseries/Mccook, SW/Mccook, Evap.xlsx")
+MccookEvap = read_xlsx("timeseries/Mccook, SW/Mccook, Evap.xlsx")
+MccookEvapIndex = createEvapIndexEvap(MccookEvap)
 
-mccookEvapIndex = (1963 + mccookEvap$DATE)
-mccookEvapIndex.date = as.Date(mccookEvapIndex)
+#fill missing dates
+MccookEvap = fillMissingDatesEvap(MccookEvapIndex, MccookEvap)
 
-#to be sure that there are no missing dates in the data frame, take the first and last entry and merge the data frames; fill missing dates with NA and interpolate later
-DateRangeMccookEvap = seq(min(mccookEvapIndex.date), max(mccookEvapIndex.date), by = 1)
-allDatesMccookEvap = data.frame(DateRangeMccookEvap)
-allDatesMccookEvap = rename(allDatesMccookEvap, replace = c("DateRangeMccookEvap" = "DATE"))
-mccookEvap = merge(mccookEvap, allDatesMccookEvap, all=TRUE)
-mccookEvap = mccookEvap[!duplicated(mccookEvap$DATE),]
+#create an xts object
+MccookEvapIndex = createEvapIndexEvap(MccookEvap)
+EvapMccook = xts(MccookEvap$EVAP, MccookEvapIndex)
 
-#create an xts object out of the data frame for temperature
-mccookEvapIndex = (1963 + mccookEvap$DATE)
-mccookEvapIndex.date = as.Date(mccookEvapIndex)
-evapMccook = xts(mccookEvap$EVAP, mccookEvapIndex.date)
+#delete NA's
+EvapMccook = deleteNAsEvap(EvapMccook)
 
-#if there are NA's, interpolate their value
-if(sum(is.na(evapMccook)) > 0){
-  evapMccook = na.approx(evapMccook)
-} else {
-  print("no NA's")
-}
-
-plot(evapMccook)
+#plot
+plot(EvapMccook)
 
 #plot acf and pacf of the timeseries
-acfMccookEvap = acf(evapMccook, lag.max = 365)
-pacfMccookEvap = pacf(evapMccook)
+acfMccookEvap = acf(EvapMccook, lag.max = 365)
+pacfMccookEvap = pacf(EvapMccook)
 
-#make a ts object out of the xts object
-start = as.Date("1963-01-09") 
-evapMccook2 = ts(mccookEvap$EVAP, start=start, frequency = 365.25)
-evapMccook2 = na.approx(evapMccook2)
-stlMccookEvap = stl(evapMccook2, s.window="periodic")
-trendEvapMccook = stlMccookEvap$time.series[,2]
+#create trend
+start = as.Date("1953-01-01")
+trendEvapMccook = tsTrendEvap(start, MccookEvap)
 
 #forecast
-arimaEvapMccook = auto.arima(evapMccook)
-fcastEvapMccook = forecast(arimaEvapMccook, h=100)
-plot(fcastEvapMccook, include=500)
+fcastEvapMccook = forecastEvap(EvapMccook)
 
-meanEvapMccook = mean(evapMccook)
-sdEvapMccook = sd(evapMccook)
-minEvapMccook = min(evapMccook)
-maxEvapMccook = max(evapMccook)
-varEvapMccook = var(evapMccook)
+#statistics
+statisticsMccookEvap = statisticsEvap(EvapMccook)
 
 
 #boxplot of evaporation timeseries
-combineEvapTS = merge(evapAngleton, evapBenbrook, evapfortStockton, evapMccook)
-combineEvapTS = rename(combineEvapTS, replace=c("evapAngleton" = "Angleton", "evapBenbrook" = "Benbrook", "evapfortStockton" = "Fort Stockton", "evapMccook" = "Mccook"))
+combineEvapTS = merge(EvapAngleton, EvapBenbrook, EvapfortStockton, EvapMccook)
+combineEvapTS = rename(combineEvapTS, replace=c("EvapAngleton" = "Angleton", "EvapBenbrook" = "Benbrook", "EvapfortStockton" = "Fort Stockton", "EvapMccook" = "Mccook"))
 boxplot(coredata(combineEvapTS))
 
 #linear models of the time series
@@ -232,13 +208,14 @@ linTrendMccookEvap = lm(trendEvapMccook~time(trendEvapMccook))
 par(mfrow=c(1,1))
 plot(trendEvapAngleton)
 abline(linTrendAngletonEvap, col="red")
-linTrendAngletonEvap$coefficients[2]
+slopeAngletonEvap = linTrendAngletonEvap$coefficients[2]
 plot(trendEvapBenbrook)
 abline(linTrendBenbrookEvap, col="red")
-linTrendBenbrookEvap$coefficients[2]
+slopeBenbrookEvap = linTrendBenbrookEvap$coefficients[2]
 plot(trendEvapfortStockton)
 abline(linTrendfortStocktonEvap, col="red")
-linTrendfortStocktonEvap$coefficients[2]
+slopefortStocktonEvap = linTrendfortStocktonEvap$coefficients[2]
 plot(trendEvapMccook)
 abline(linTrendMccookEvap, col="red")
-linTrendMccookEvap$coefficients[2]
+slopeMccookEvap = linTrendMccookEvap$coefficients[2]
+slopeEvap = data.frame(slopeAngletonEvap, slopeBenbrookEvap, slopefortStocktonEvap, slopeMccookEvap)

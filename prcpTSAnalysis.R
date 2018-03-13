@@ -9,203 +9,193 @@ library("plyr")
 library("forecast")
 setwd("C:/Users/hans-/Documents/Master/1.Semester/ASTD/FinalAssignment/data")
 
+createPrcpIndexPrcp = function(rawData){
+  rawDataIndex = rawData$DATE
+  rawDataIndex.date = as.Date(rawDataIndex)
+  return(rawDataIndex.date)
+}
+
+fillMissingDatesPrcp = function(dates, dataFrame){
+  dateRange = seq(min(dates), max(dates), by = 1)
+  allDates = data.frame(dateRange)
+  allDates = rename(allDates, replace = c("dateRange" = "DATE"))
+  dataFrame = merge(dataFrame, allDates, all=TRUE)
+  dataFrame = dataFrame[!duplicated(dataFrame$DATE),]
+  return(dataFrame)
+}
+
+deleteNAsPrcp = function(frame){
+  if(sum(is.na(frame)) > 0){
+    frame = na.approx(frame)
+  } else {
+    print("no NA's")
+  }
+}
+
+tsTrendPrcp = function(start, dataFrame){
+  PrcpTS = ts(dataFrame$PRCP, start=start, frequency=365.25)
+  PrcpTS = na.approx(PrcpTS)
+  stlPrcpTS = stl(PrcpTS, s.window = "periodic")
+  trendPrcpTS = stlPrcpTS$time.series[,2]
+  return(trendPrcpTS)
+}
+
+forecastPrcp = function(xtsPrcp){
+  arimaPrcp = auto.arima(xtsPrcp)
+  fcastPrcp = forecast(arimaPrcp, h=100)
+  return(fcastPrcp)
+}
+
+statisticsPrcp = function(xtsPrcp){
+  mean = mean(xtsPrcp)
+  sd = sd(xtsPrcp)
+  min = min(xtsPrcp)
+  max = max(xtsPrcp)
+  var = var(xtsPrcp)
+  median = median(xtsPrcp)
+  firstQuartile = quantile(xtsPrcp, 0.25)
+  thirdQuartile = quantile(xtsPrcp, 0.75)
+  statistics = data.frame(mean, sd, min, max, var, median, firstQuartile, thirdQuartile)
+  return(statistics)
+}
+
 # Angleton, Texas in the South East near Houston
 # Precipitation timeseries for Angleton in the SouthEast of Texas
 angletonPrcp = read_xlsx("timeseries/Angleton, SE/Angleton, Prcp.xlsx")
+angletonPrcpIndex = createPrcpIndexPrcp(angletonPrcp)
 
-angletonPrcpIndex = (1950 + angletonPrcp$DATE)
-angletonPrcpIndex.date = as.Date(angletonPrcpIndex)
+#fill missing dates
+angletonPrcp = fillMissingDatesPrcp(angletonPrcpIndex, angletonPrcp)
 
-#to be sure that there are no missing dates in the data frame, take the first and last entry and merge the data frames; fill missing dates with NA and interpolate later
-DateRangeAngletonPrcp = seq(min(angletonPrcpIndex.date), max(angletonPrcpIndex.date), by = 1)
-allDatesAngletonPrcp = data.frame(DateRangeAngletonPrcp)
-allDatesAngletonPrcp = rename(allDatesAngletonPrcp, replace = c("DateRangeAngletonPrcp" = "DATE"))
-angletonPrcp = merge(angletonPrcp, allDatesAngletonPrcp, all=TRUE)
-angletonPrcp = angletonPrcp[!duplicated(angletonPrcp$DATE),]
+#create an xts object
+angletonPrcpIndex = createPrcpIndexPrcp(angletonPrcp)
+PrcpAngleton = xts(angletonPrcp$PRCP, angletonPrcpIndex)
 
-#create an xts object out of the data frame for Prcperature
-angletonPrcpIndex = (1950 + angletonPrcp$DATE)
-angletonPrcpIndex.date = as.Date(angletonPrcpIndex)
-prcpAngleton = xts(angletonPrcp$PRCP, angletonPrcpIndex.date)
+#delete NA's
+PrcpAngleton = deleteNAsPrcp(PrcpAngleton)
 
-#if there are NA's, interpolate their value
-if(sum(is.na(prcpAngleton)) > 0){
-  prcpAngleton = na.approx(prcpAngleton)
-} else {
-  print("no NA's")
-}
-
-plot(prcpAngleton)
+#plot
+plot(PrcpAngleton)
 
 #plot acf and pacf of the timeseries
-acfAngletonPrcp = acf(prcpAngleton, lag.max = 365)
-pacfAngletonPrcp = pacf(prcpAngleton)
+acfAngletonPrcp = acf(PrcpAngleton, lag.max = 365)
+pacfAngletonPrcp = pacf(PrcpAngleton)
 
-#Holt-Winters of the time series
-#hw = HoltWinters(tmpMaxAngleton, gamma=FALSE)
-
-#dtw for comparison and maybe simple statistical values and leave forecast out because it makes no sense
-
-#make a ts object out of the xts object
-start = as.Date("1950-01-01") 
-prcpAngleton2 = ts(angletonPrcp$PRCP, start=start, frequency = 365.25)
-prcpAngleton2 = na.approx(prcpAngleton2)
-stlAngletonPrcp = stl(prcpAngleton2, s.window="periodic")
-trendPrcpAngleton = stlAngletonPrcp$time.series[,2]
+#create trend
+start = as.Date("1950-01-01")  
+trendPrcpAngleton = tsTrendPrcp(start, angletonPrcp)
 
 #forecast
-arimaPrcpAngleton = auto.arima(prcpAngleton)
-fcastPrcpAngleton = forecast(arimaPrcpAngleton, h=100)
-plot(fcastPrcpAngleton, include=500)
+fcastPrcpAngleton = forecastPrcp(PrcpAngleton)
 
-meanPrcpAngleton = mean(prcpAngleton)
-sdPrcpAngleton = sd(prcpAngleton)
-minPrcpAngleton = min(prcpAngleton)
-maxPrcpAngleton = max(prcpAngleton)
-varPrcpAngleton = var(prcpAngleton)
-
+#statistics
+statisticsAngletonPrcp = statisticsPrcp(PrcpAngleton)
 
 
 # Benbrook Dam, Texas in the North East near Dallas
 # Precipitation timeseries for Benbrook in the NorthEast of Texas
-benbrookPrcp = read_xlsx("timeseries/Benbrook, NE/Benbrook, Prcp.xlsx")
+BenbrookPrcp = read_xlsx("timeseries/Benbrook, NE/Benbrook, Prcp.xlsx")
+BenbrookPrcpIndex = createPrcpIndexPrcp(BenbrookPrcp)
 
-benbrookPrcpIndex = (1950 + benbrookPrcp$DATE)
-benbrookPrcpIndex.date = as.Date(benbrookPrcpIndex)
+#fill missing dates
+BenbrookPrcp = fillMissingDatesPrcp(BenbrookPrcpIndex, BenbrookPrcp)
 
-#to be sure that there are no missing dates in the data frame, take the first and last entry and merge the data frames; fill missing dates with NA and interpolate later
-DateRangeBenbrookPrcp = seq(min(benbrookPrcpIndex.date), max(benbrookPrcpIndex.date), by = 1)
-allDatesBenbrookPrcp = data.frame(DateRangeBenbrookPrcp)
-allDatesBenbrookPrcp = rename(allDatesBenbrookPrcp, replace = c("DateRangeBenbrookPrcp" = "DATE"))
-benbrookPrcp = merge(benbrookPrcp, allDatesBenbrookPrcp, all=TRUE)
-benbrookPrcp = benbrookPrcp[!duplicated(benbrookPrcp$DATE),]
+#create an xts object
+BenbrookPrcpIndex = createPrcpIndexPrcp(BenbrookPrcp)
+PrcpBenbrook = xts(BenbrookPrcp$PRCP, BenbrookPrcpIndex)
 
-benbrookPrcpIndex = (1950 + benbrookPrcp$DATE)
-benbrookPrcpIndex.date = as.Date(benbrookPrcpIndex)
-prcpBenbrook = xts(benbrookPrcp$PRCP, benbrookPrcpIndex.date)
+#delete NA's
+PrcpBenbrook = deleteNAsPrcp(PrcpBenbrook)
 
-#if there are NA's, interpolate their value
-if(sum(is.na(prcpBenbrook)) > 0){
-  prcpBenbrook = na.approx(prcpBenbrook)
-} else {
-  print("no NA's")
-}
+#plot
+plot(PrcpBenbrook)
 
-plot(prcpBenbrook)
+#plot acf and pacf of the timeseries
+acfBenbrookPrcp = acf(PrcpBenbrook, lag.max = 365)
+pacfBenbrookPrcp = pacf(PrcpBenbrook)
 
-start = as.Date("1950-01-01")
-prcpBenbrook2 = ts(benbrookPrcp$PRCP, start=start, frequency = 365.25)
-prcpBenbrook2 = na.approx(prcpBenbrook2)
-stlBenbrookPrcp = stl(prcpBenbrook2, s.window="periodic")
-trendPrcpBenbrook = stlBenbrookPrcp$time.series[,2]
+#create trend
+start = as.Date("1950-01-01")  
+trendPrcpBenbrook = tsTrendPrcp(start, BenbrookPrcp)
 
 #forecast
-arimaPrcpBenbrook = auto.arima(prcpBenbrook)
-fcastPrcpBenbrook = forecast(arimaPrcpBenbrook, h=100)
-plot(fcastPrcpBenbrook, include=500)
+fcastPrcpBenbrook = forecastPrcp(PrcpBenbrook)
 
-meanPrcpBenbrook = mean(prcpBenbrook)
-sdPrcpBenbrook = sd(prcpBenbrook)
-minPrcpBenbrook = min(prcpBenbrook)
-maxPrcpBenbrook = max(prcpBenbrook)
-varPrcpBenbrook = var(prcpBenbrook)
+#statistics
+statisticsBenbrookPrcp = statisticsPrcp(PrcpBenbrook)
 
 
 
 # Fort Stockton, Texas in the North West near the border to New Mexico
 # Precipitation timeseries for Fort Stockton in the NorthWest of Texas
-fortStocktonPrcp = read_xlsx("timeseries/FortStockton, NW/FortStockton, Prcp.xlsx")
+fortStocktonPrcp = read_xlsx("timeseries/fortStockton, NW/fortStockton, Prcp.xlsx")
+fortStocktonPrcpIndex = createPrcpIndexPrcp(fortStocktonPrcp)
 
-fortStocktonPrcpIndex = (1950 + fortStocktonPrcp$DATE)
-fortStocktonPrcpIndex.date = as.Date(fortStocktonPrcpIndex)
+#fill missing dates
+fortStocktonPrcp = fillMissingDatesPrcp(fortStocktonPrcpIndex, fortStocktonPrcp)
 
-#to be sure that there are no missing dates in the data frame, take the first and last entry and merge the data frames; fill missing dates with NA and interpolate later
-DateRangefortStocktonPrcp = seq(min(fortStocktonPrcpIndex.date), max(fortStocktonPrcpIndex.date), by = 1)
-allDatesfortStocktonPrcp = data.frame(DateRangefortStocktonPrcp)
-allDatesfortStocktonPrcp = rename(allDatesfortStocktonPrcp, replace = c("DateRangefortStocktonPrcp" = "DATE"))
-fortStocktonPrcp = merge(fortStocktonPrcp, allDatesfortStocktonPrcp, all=TRUE)
-fortStocktonPrcp = fortStocktonPrcp[!duplicated(fortStocktonPrcp$DATE),]
+#create an xts object
+fortStocktonPrcpIndex = createPrcpIndexPrcp(fortStocktonPrcp)
+PrcpfortStockton = xts(fortStocktonPrcp$PRCP, fortStocktonPrcpIndex)
 
-fortStocktonPrcpIndex = (1950 + fortStocktonPrcp$DATE)
-fortStocktonPrcpIndex.date = as.Date(fortStocktonPrcpIndex)
-prcpfortStockton = xts(fortStocktonPrcp$PRCP, fortStocktonPrcpIndex.date)
+#delete NA's
+PrcpfortStockton = deleteNAsPrcp(PrcpfortStockton)
 
-#if there are NA's, interpolate their value
-if(sum(is.na(prcpfortStockton)) > 0){
-  prcpfortStockton = na.approx(prcpfortStockton)
-} else {
-  print("no NA's")
-}
+#plot
+plot(PrcpfortStockton)
 
-plot(prcpfortStockton)
+#plot acf and pacf of the timeseries
+acffortStocktonPrcp = acf(PrcpfortStockton, lag.max = 365)
+pacffortStocktonPrcp = pacf(PrcpfortStockton)
 
-start = as.Date("1950-01-01")
-prcpfortStockton2 = ts(fortStocktonPrcp$PRCP, start=start, frequency = 365.25)
-prcpfortStockton2 = na.approx(prcpfortStockton2)
-stlfortStocktonPrcp = stl(prcpfortStockton2, s.window="periodic")
-trendPrcpfortStockton = stlfortStocktonPrcp$time.series[,2]
+#create trend
+start = as.Date("1950-01-01")  
+trendPrcpfortStockton = tsTrendPrcp(start, fortStocktonPrcp)
 
 #forecast
-arimaPrcpfortStockton = auto.arima(prcpfortStockton)
-fcastPrcpfortStockton = forecast(arimaPrcpfortStockton, h=100)
-plot(fcastPrcpfortStockton, include=500)
+fcastPrcpfortStockton = forecastPrcp(PrcpfortStockton)
 
-meanPrcpfortStockton = mean(prcpfortStockton)
-sdPrcpfortStockton = sd(prcpfortStockton)
-minPrcpfortStockton = min(prcpfortStockton)
-maxPrcpfortStockton = max(prcpfortStockton)
-varPrcpfortStockton = var(prcpfortStockton)
+#statistics
+statisticsfortStocktonPrcp = statisticsPrcp(PrcpfortStockton)
 
 
 
 # Mccook, Texas in the South West near the coast of the Golf of Mexico and the Mexican border
 # Precipitation timeseries for Mccook in the South West of Texas
 MccookPrcp = read_xlsx("timeseries/Mccook, SW/Mccook, Prcp.xlsx")
+MccookPrcpIndex = createPrcpIndexPrcp(MccookPrcp)
 
-MccookPrcpIndex = (1950 + MccookPrcp$DATE)
-MccookPrcpIndex.date = as.Date(MccookPrcpIndex)
+#fill missing dates
+MccookPrcp = fillMissingDatesPrcp(MccookPrcpIndex, MccookPrcp)
 
-#to be sure that there are no missing dates in the data frame, take the first and last entry and merge the data frames; fill missing dates with NA and interpolate later
-DateRangeMccookPrcp = seq(min(MccookPrcpIndex.date), max(MccookPrcpIndex.date), by = 1)
-allDatesMccookPrcp = data.frame(DateRangeMccookPrcp)
-allDatesMccookPrcp = rename(allDatesMccookPrcp, replace = c("DateRangeMccookPrcp" = "DATE"))
-MccookPrcp = merge(MccookPrcp, allDatesMccookPrcp, all=TRUE)
-MccookPrcp = MccookPrcp[!duplicated(MccookPrcp$DATE),]
+#create an xts object
+MccookPrcpIndex = createPrcpIndexPrcp(MccookPrcp)
+PrcpMccook = xts(MccookPrcp$PRCP, MccookPrcpIndex)
 
-MccookPrcpIndex = (1950 + MccookPrcp$DATE)
-MccookPrcpIndex.date = as.Date(MccookPrcpIndex)
-prcpMccook = xts(MccookPrcp$PRCP, MccookPrcpIndex.date)
+#delete NA's
+PrcpMccook = deleteNAsPrcp(PrcpMccook)
 
-#if there are NA's, interpolate their value
-if(sum(is.na(prcpMccook)) > 0){
-  prcpMccook = na.approx(prcpMccook)
-} else {
-  print("no NA's")
-}
+#plot
+plot(PrcpMccook)
 
-plot(prcpMccook)
+#plot acf and pacf of the timeseries
+acfMccookPrcp = acf(PrcpMccook, lag.max = 365)
+pacfMccookPrcp = pacf(PrcpMccook)
 
-start = as.Date("1950-01-01")
-prcpMccook2 = ts(MccookPrcp$PRCP, start=start, frequency = 365.25)
-prcpMccook2 = na.approx(prcpMccook2)
-stlMccookPrcp = stl(prcpMccook2, s.window="periodic")
-trendPrcpMccook = stlMccookPrcp$time.series[,2]
+#create trend
+start = as.Date("1950-01-01")  
+trendPrcpMccook = tsTrendPrcp(start, MccookPrcp)
 
 #forecast
-arimaPrcpMccook = auto.arima(prcpMccook)
-fcastPrcpMccook = forecast(arimaPrcpMccook, h=100)
-plot(fcastPrcpMccook, include=500)
+fcastPrcpMccook = forecastPrcp(PrcpMccook)
 
-meanPrcpMccook = mean(prcpMccook)
-sdPrcpMccook = sd(prcpMccook)
-minPrcpMccook = min(prcpMccook)
-maxPrcpMccook = max(prcpMccook)
-varPrcpMccook = var(prcpMccook)
+#statistics
+statisticsMccookPrcp = statisticsPrcp(PrcpMccook)
 
 
 #boxplot of precipitation timeseries
-combinePrcpTS = merge(prcpAngleton, prcpBenbrook, prcpfortStockton, prcpMccook)
-combinePrcpTS = rename(combinePrcpTS, replace=c("prcpAngleton" = "Angleton", "prcpBenbrook" = "Benbrook", "prcpfortStockton" = "Fort Stockton", "prcpMccook" = "Mccook"))
+combinePrcpTS = merge(PrcpAngleton, PrcpBenbrook, PrcpfortStockton, PrcpMccook)
+combinePrcpTS = rename(combinePrcpTS, replace=c("PrcpAngleton" = "Angleton", "PrcpBenbrook" = "Benbrook", "PrcpfortStockton" = "Fort Stockton", "PrcpMccook" = "Mccook"))
 boxplot(coredata(combinePrcpTS))
 
 #linear models of the time series
@@ -218,13 +208,14 @@ linTrendMccookPrcp = lm(trendPrcpMccook~time(trendPrcpMccook))
 par(mfrow=c(1,1))
 plot(trendPrcpAngleton)
 abline(linTrendAngletonPrcp, col="red")
-linTrendAngletonPrcp$coefficients[2]
+slopeAngletonPrcp = linTrendAngletonPrcp$coefficients[2]
 plot(trendPrcpBenbrook)
 abline(linTrendBenbrookPrcp, col="red")
-linTrendBenbrookPrcp$coefficients[2]
+slopeBenbrookPrcp = linTrendBenbrookPrcp$coefficients[2]
 plot(trendPrcpfortStockton)
 abline(linTrendfortStocktonPrcp, col="red")
-linTrendfortStocktonPrcp$coefficients[2]
+slopefortStocktonPrcp = linTrendfortStocktonPrcp$coefficients[2]
 plot(trendPrcpMccook)
 abline(linTrendMccookPrcp, col="red")
-linTrendMccookPrcp$coefficients[2]
+slopeMccookPrcp = linTrendMccookPrcp$coefficients[2]
+slopePrcp = data.frame(slopeAngletonPrcp, slopeBenbrookPrcp, slopefortStocktonPrcp, slopeMccookPrcp)

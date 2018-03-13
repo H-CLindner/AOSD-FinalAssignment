@@ -9,199 +9,190 @@ library("plyr")
 library("forecast")
 setwd("C:/Users/hans-/Documents/Master/1.Semester/ASTD/FinalAssignment/data")
 
+createWindIndexWind = function(rawData){
+  rawDataIndex = rawData$DATE
+  rawDataIndex.date = as.Date(rawDataIndex)
+  return(rawDataIndex.date)
+}
+
+fillMissingDatesWind = function(dates, dataFrame){
+  dateRange = seq(min(dates), max(dates), by = 1)
+  allDates = data.frame(dateRange)
+  allDates = rename(allDates, replace = c("dateRange" = "DATE"))
+  dataFrame = merge(dataFrame, allDates, all=TRUE)
+  dataFrame = dataFrame[!duplicated(dataFrame$DATE),]
+  return(dataFrame)
+}
+
+deleteNAsWind = function(frame){
+  if(sum(is.na(frame)) > 0){
+    frame = na.approx(frame)
+  } else {
+    print("no NA's")
+  }
+}
+
+tsTrendWind = function(start, dataFrame){
+  WindTS = ts(dataFrame$WDMV, start=start, frequency=365.25)
+  WindTS = na.approx(WindTS)
+  stlWindTS = stl(WindTS, s.window = "periodic")
+  trendWindTS = stlWindTS$time.series[,2]
+  return(trendWindTS)
+}
+
+forecastWind = function(xtsWind){
+  arimaWind = auto.arima(xtsWind)
+  fcastWind = forecast(arimaWind, h=100)
+  return(fcastWind)
+}
+
+statisticsWind = function(xtsWind){
+  mean = mean(xtsWind)
+  sd = sd(xtsWind)
+  min = min(xtsWind)
+  max = max(xtsWind)
+  var = var(xtsWind)
+  median = median(xtsWind)
+  firstQuartile = quantile(xtsWind, 0.25)
+  thirdQuartile = quantile(xtsWind, 0.75)
+  statistics = data.frame(mean, sd, min, max, var, median, firstQuartile, thirdQuartile)
+  return(statistics)
+}
+
 # Angleton, Texas in the South East near Houston
 # Wind timeseries for Angleton in the SouthEast of Texas
 angletonWind = read_xlsx("timeseries/Angleton, SE/Angleton, Wind.xlsx")
+angletonWindIndex = createWindIndexWind(angletonWind)
 
-angletonWindIndex = (1953 + angletonWind$DATE)
-angletonWindIndex.date = as.Date(angletonWindIndex)
+#fill missing dates
+angletonWind = fillMissingDatesWind(angletonWindIndex, angletonWind)
 
-#to be sure that there are no missing dates in the data frame, take the first and last entry and merge the data frames; fill missing dates with NA and interpolate later
-DateRangeAngletonWind = seq(min(angletonWindIndex.date), max(angletonWindIndex.date), by = 1)
-allDatesAngletonWind = data.frame(DateRangeAngletonWind)
-allDatesAngletonWind = rename(allDatesAngletonWind, replace = c("DateRangeAngletonWind" = "DATE"))
-angletonWind = merge(angletonWind, allDatesAngletonWind, all=TRUE)
-angletonWind = angletonWind[!duplicated(angletonWind$DATE),]
+#create an xts object
+angletonWindIndex = createWindIndexWind(angletonWind)
+WindAngleton = xts(angletonWind$WDMV, angletonWindIndex)
 
-#create an xts object out of the data frame for Winderature
-angletonWindIndex = (1953 + angletonWind$DATE)
-angletonWindIndex.date = as.Date(angletonWindIndex)
-WindAngleton = xts(angletonWind$WDMV, angletonWindIndex.date)
+#delete NA's
+WindAngleton = deleteNAsWind(WindAngleton)
 
-#if there are NA's, interpolate their value
-if(sum(is.na(WindAngleton)) > 0){
-  WindAngleton = na.approx(WindAngleton)
-} else {
-  print("no NA's")
-}
-
+#plot
 plot(WindAngleton)
 
 #plot acf and pacf of the timeseries
 acfAngletonWind = acf(WindAngleton, lag.max = 365)
 pacfAngletonWind = pacf(WindAngleton)
 
-#Holt-Winters of the time series
-#hw = HoltWinters(tmpMaxAngleton, gamma=FALSE)
-
-#dtw for comparison and maybe simple statistical values and leave forecast out because it makes no sense
-
-#make a ts object out of the xts object
+#create trend
 start = as.Date("1953-01-01") 
-WindAngleton2 = ts(angletonWind$WDMV, start=start, frequency = 365.25)
-WindAngleton2 = na.approx(WindAngleton2)
-stlAngletonWind = stl(WindAngleton2, s.window="periodic")
-trendWindAngleton = stlAngletonWind$time.series[,2]
+trendWindAngleton = tsTrendWind(start, angletonWind)
 
 #forecast
-arimaWindAngleton = auto.arima(WindAngleton)
-fcastWindAngleton = forecast(arimaWindAngleton, h=100)
-plot(fcastWindAngleton, include=500)
+fcastWindAngleton = forecastWind(WindAngleton)
 
-meanWindAngleton = mean(WindAngleton)
-sdWindAngleton = sd(WindAngleton)
-minWindAngleton = min(WindAngleton)
-maxWindAngleton = max(WindAngleton)
-varWindAngleton = var(WindAngleton)
+#statistics
+statisticsAngletonWind = statisticsWind(WindAngleton)
 
 
 
 
 # Benbrook Dam, Texas in the North East near Dallas
 # Precipitation timeseries for Benbrook in the NorthEast of Texas
-benbrookWind = read_xlsx("timeseries/Benbrook, NE/Benbrook, Wind.xlsx")
+BenbrookWind = read_xlsx("timeseries/Benbrook, NE/Benbrook, Wind.xlsx")
+BenbrookWindIndex = createWindIndexWind(BenbrookWind)
 
-benbrookWindIndex = (1979 + benbrookWind$DATE)
-benbrookWindIndex.date = as.Date(benbrookWindIndex)
+#fill missing dates
+BenbrookWind = fillMissingDatesWind(BenbrookWindIndex, BenbrookWind)
 
-#to be sure that there are no missing dates in the data frame, take the first and last entry and merge the data frames; fill missing dates with NA and interpolate later
-DateRangeBenbrookWind = seq(min(benbrookWindIndex.date), max(benbrookWindIndex.date), by = 1)
-allDatesBenbrookWind = data.frame(DateRangeBenbrookWind)
-allDatesBenbrookWind = rename(allDatesBenbrookWind, replace = c("DateRangeBenbrookWind" = "DATE"))
-benbrookWind = merge(benbrookWind, allDatesBenbrookWind, all=TRUE)
-benbrookWind = benbrookWind[!duplicated(benbrookWind$DATE),]
+#create an xts object
+BenbrookWindIndex = createWindIndexWind(BenbrookWind)
+WindBenbrook = xts(BenbrookWind$WDMV, BenbrookWindIndex)
 
-benbrookWindIndex = (1979 + benbrookWind$DATE)
-benbrookWindIndex.date = as.Date(benbrookWindIndex)
-WindBenbrook = xts(benbrookWind$WDMV, benbrookWindIndex.date)
+#delete NA's
+WindBenbrook = deleteNAsWind(WindBenbrook)
 
-#if there are NA's, interpolate their value
-if(sum(is.na(WindBenbrook)) > 0){
-  WindBenbrook = na.approx(WindBenbrook)
-} else {
-  print("no NA's")
-}
-
+#plot
 plot(WindBenbrook)
 
-start = as.Date("1979-01-01")
-WindBenbrook2 = ts(benbrookWind$WDMV, start=start, frequency = 365.25)
-WindBenbrook2 = na.approx(WindBenbrook2)
-stlBenbrookWind = stl(WindBenbrook2, s.window="periodic")
-trendWindBenbrook = stlBenbrookWind$time.series[,2]
+#plot acf and pacf of the timeseries
+acfBenbrookWind = acf(WindBenbrook, lag.max = 365)
+pacfBenbrookWind = pacf(WindBenbrook)
+
+#create trend
+start = as.Date("1979-01-01") 
+trendWindBenbrook = tsTrendWind(start, BenbrookWind)
 
 #forecast
-arimaWindBenbrook = auto.arima(WindBenbrook)
-fcastWindBenbrook = forecast(arimaWindBenbrook, h=100)
-plot(fcastWindBenbrook, include=500)
+fcastWindBenbrook = forecastWind(WindBenbrook)
 
-meanWindBenbrook = mean(WindBenbrook)
-sdWindBenbrook = sd(WindBenbrook)
-minWindBenbrook = min(WindBenbrook)
-maxWindBenbrook = max(WindBenbrook)
-varWindBenbrook = var(WindBenbrook)
+#statistics
+statisticsBenbrookWind = statisticsWind(WindBenbrook)
 
 
 
 # Fort Stockton, Texas in the North West near the border to New Mexico
 # Precipitation timeseries for Fort Stockton in the NorthWest of Texas
-fortStocktonWind = read_xlsx("timeseries/FortStockton, NW/FortStockton, Wind.xlsx")
+fortStocktonWind = read_xlsx("timeseries/fortStockton, NW/fortStockton, Wind.xlsx")
+fortStocktonWindIndex = createWindIndexWind(fortStocktonWind)
 
-fortStocktonWindIndex = (1950 + fortStocktonWind$DATE)
-fortStocktonWindIndex.date = as.Date(fortStocktonWindIndex)
+#fill missing dates
+fortStocktonWind = fillMissingDatesWind(fortStocktonWindIndex, fortStocktonWind)
 
-#to be sure that there are no missing dates in the data frame, take the first and last entry and merge the data frames; fill missing dates with NA and interpolate later
-DateRangefortStocktonWind = seq(min(fortStocktonWindIndex.date), max(fortStocktonWindIndex.date), by = 1)
-allDatesfortStocktonWind = data.frame(DateRangefortStocktonWind)
-allDatesfortStocktonWind = rename(allDatesfortStocktonWind, replace = c("DateRangefortStocktonWind" = "DATE"))
-fortStocktonWind = merge(fortStocktonWind, allDatesfortStocktonWind, all=TRUE)
-fortStocktonWind = fortStocktonWind[!duplicated(fortStocktonWind$DATE),]
+#create an xts object
+fortStocktonWindIndex = createWindIndexWind(fortStocktonWind)
+WindfortStockton = xts(fortStocktonWind$WDMV, fortStocktonWindIndex)
 
-fortStocktonWindIndex = (1950 + fortStocktonWind$DATE)
-fortStocktonWindIndex.date = as.Date(fortStocktonWindIndex)
-WindfortStockton = xts(fortStocktonWind$WDMV, fortStocktonWindIndex.date)
+#delete NA's
+WindfortStockton = deleteNAsWind(WindfortStockton)
 
-#if there are NA's, interpolate their value
-if(sum(is.na(WindfortStockton)) > 0){
-  WindfortStockton = na.approx(WindfortStockton)
-} else {
-  print("no NA's")
-}
-
+#plot
 plot(WindfortStockton)
 
+#plot acf and pacf of the timeseries
+acffortStocktonWind = acf(WindfortStockton, lag.max = 365)
+pacffortStocktonWind = pacf(WindfortStockton)
+
+#create trend
 start = as.Date("1950-01-01")
-WindfortStockton2 = ts(fortStocktonWind$WDMV, start=start, frequency = 365.25)
-WindfortStockton2 = na.approx(WindfortStockton2)
-stlfortStocktonWind = stl(WindfortStockton2, s.window="periodic")
-trendWindfortStockton = stlfortStocktonWind$time.series[,2]
+trendWindfortStockton = tsTrendWind(start, fortStocktonWind)
 
 #forecast
-arimaWindfortStockton = auto.arima(WindfortStockton)
-fcastWindfortStockton = forecast(arimaWindfortStockton, h=100)
-plot(fcastWindfortStockton, include=500)
+fcastWindfortStockton = forecastWind(WindfortStockton)
 
-meanWindfortStockton = mean(WindfortStockton)
-sdWindfortStockton = sd(WindfortStockton)
-minWindfortStockton = min(WindfortStockton)
-maxWindfortStockton = max(WindfortStockton)
-varWindfortStockton = var(WindfortStockton)
+#statistics
+statisticsfortStocktonWind = statisticsWind(WindfortStockton)
 
 
 
 # Mccook, Texas in the South West near the coast of the Golf of Mexico and the Mexican border
 # Precipitation timeseries for Mccook in the South West of Texas
 MccookWind = read_xlsx("timeseries/Mccook, SW/Mccook, Wind.xlsx")
+MccookWindIndex = createWindIndexWind(MccookWind)
 
-MccookWindIndex = (1963 + MccookWind$DATE)
-MccookWindIndex.date = as.Date(MccookWindIndex)
+#fill missing dates
+MccookWind = fillMissingDatesWind(MccookWindIndex, MccookWind)
 
-#to be sure that there are no missing dates in the data frame, take the first and last entry and merge the data frames; fill missing dates with NA and interpolate later
-DateRangeMccookWind = seq(min(MccookWindIndex.date), max(MccookWindIndex.date), by = 1)
-allDatesMccookWind = data.frame(DateRangeMccookWind)
-allDatesMccookWind = rename(allDatesMccookWind, replace = c("DateRangeMccookWind" = "DATE"))
-MccookWind = merge(MccookWind, allDatesMccookWind, all=TRUE)
-MccookWind = MccookWind[!duplicated(MccookWind$DATE),]
+#create an xts object
+MccookWindIndex = createWindIndexWind(MccookWind)
+WindMccook = xts(MccookWind$WDMV, MccookWindIndex)
 
-MccookWindIndex = (1963 + MccookWind$DATE)
-MccookWindIndex.date = as.Date(MccookWindIndex)
-WindMccook = xts(MccookWind$WDMV, MccookWindIndex.date)
+#delete NA's
+WindMccook = deleteNAsWind(WindMccook)
 
-#if there are NA's, interpolate their value
-if(sum(is.na(WindMccook)) > 0){
-  WindMccook = na.approx(WindMccook)
-} else {
-  print("no NA's")
-}
-
+#plot
 plot(WindMccook)
 
+#plot acf and pacf of the timeseries
+acfMccookWind = acf(WindMccook, lag.max = 365)
+pacfMccookWind = pacf(WindMccook)
+
+#create trend
 start = as.Date("1963-01-01")
-WindMccook2 = ts(MccookWind$WDMV, start=start, frequency = 365.25)
-WindMccook2 = na.approx(WindMccook2)
-stlMccookWind = stl(WindMccook2, s.window="periodic")
-trendWindMccook = stlMccookWind$time.series[,2]
+trendWindMccook = tsTrendWind(start, MccookWind)
 
 #forecast
-arimaWindMccook = auto.arima(WindMccook)
-fcastWindMccook = forecast(arimaWindMccook, h=100)
-plot(fcastWindMccook, include=500)
+fcastWindMccook = forecastWind(WindMccook)
 
-meanWindMccook = mean(WindMccook)
-sdWindMccook = sd(WindMccook)
-minWindMccook = min(WindMccook)
-maxWindMccook = max(WindMccook)
-varWindMccook = var(WindMccook)
+#statistics
+statisticsMccookWind = statisticsWind(WindMccook)
 
 #boxplot of precipitation timeseries
 combineWindTS = merge(WindAngleton, WindBenbrook, WindfortStockton, WindMccook)
@@ -218,13 +209,14 @@ linTrendMccookWind = lm(trendWindMccook~time(trendWindMccook))
 par(mfrow=c(1,1))
 plot(trendWindAngleton)
 abline(linTrendAngletonWind, col="red")
-linTrendAngletonWind$coefficients[2]
+slopeAngletonWind = linTrendAngletonWind$coefficients[2]
 plot(trendWindBenbrook)
 abline(linTrendBenbrookWind, col="red")
-linTrendBenbrookWind$coefficients[2]
+slopeBenbrookWind = linTrendBenbrookWind$coefficients[2]
 plot(trendWindfortStockton)
 abline(linTrendfortStocktonWind, col="red")
-linTrendfortStocktonWind$coefficients[2]
+slopefortStocktonWind = linTrendfortStocktonWind$coefficients[2]
 plot(trendWindMccook)
 abline(linTrendMccookWind, col="red")
-linTrendMccookWind$coefficients[2]
+slopeMccookWind = linTrendMccookWind$coefficients[2]
+slopeWind = data.frame(slopeAngletonWind, slopeBenbrookWind, slopefortStocktonWind, slopeMccookWind)
