@@ -10,7 +10,16 @@ library("forecast")
 library("gstat")
 library("sp")
 library("rgdal")
+library("dplyr")
 setwd("C:/Users/hans-/Documents/Master/1.Semester/ASTD/FinalAssignment/data")
+
+computePrcpAverage = function(dataFrame){
+  dataFrameSubset = mutate(dataFrame, month = format(DATE, "%m"))
+  dataFrameMean = group_by(dataFrameSubset, STATION, NAME, LATITUDE, LONGITUDE, ELEVATION, month) %>% summarise(meanPrcp = mean(PRCP, na.rm = T))
+  dataFrameMean$meanPrcp = round(dataFrameMean$meanPrcp, digits=4)
+  dataFrameMean = dataFrameMean[!rowSums(dataFrameMean[7]>15),]
+  return(dataFrameMean)
+}
 
 
                                 # JANUARY 2015 #
@@ -21,44 +30,44 @@ JanPrcp2015$LATITUDE = as.numeric(JanPrcp2015$LATITUDE)
 JanPrcp2015$LONGITUDE = as.numeric(JanPrcp2015$LONGITUDE)
 
 #data frame with data for one day
-JanPrcp2015Subset = JanPrcp2015
-JanPrcp2015Subset$DATE = as.character(JanPrcp2015Subset$DATE)
-JanPrcp2015Subset = subset(JanPrcp2015Subset, JanPrcp2015Subset$DATE == "2015-01-01")
-JanPrcp2015Subset = na.approx(JanPrcp2015Subset)
-
-JanPrcp2015Locations = JanPrcp2015[c(2,3,4)]
-JanPrcp2015Locations = JanPrcp2015Locations[!duplicated(JanPrcp2015Locations[,c('NAME','LATITUDE','LONGITUDE')]),]
-coordinates(JanPrcp2015Locations) = JanPrcp2015Locations[c(3,2)]
-
+JanPrcp2015Subset = computePrcpAverage(JanPrcp2015)
 coordinates(JanPrcp2015Subset) = JanPrcp2015Subset[c(4,3)]
+proj4string(JanPrcp2015Subset) = CRS("+init=epsg:4326")
+JanPrcp2015Subset = spTransform(JanPrcp2015Subset, CRS("+proj=utm +zone=13 +ellps=GRS80 +datum=NAD83 +units=m +no_defs"))
+
+#JanPrcp2015Zero = zerodist(JanPrcp2015Subset, zero=1000)
+#JanPrcp2015Subset = JanPrcp2015Subset[-c(JanPrcp2015Zero[,1]),]
 
 # variogram for the one day
-vJanPrcp2015 = variogram(JanPrcp2015Subset$PRCP ~ 1, JanPrcp2015Subset, cutoff=2)
+vJanPrcp2015 = variogram(meanPrcp ~ LATITUDE+LONGITUDE, JanPrcp2015Subset)
 plot(vJanPrcp2015)
 
-vJanPrcp2015.fit = fit.variogram(vJanPrcp2015, vgm(32, 'Sph', 1.8, 9))
+#vJanPrcp2015.fit = fit.variogram(vJanPrcp2015, vgm(42, 'Lin', 0))
+vJanPrcp2015.fit = fit.variogram(vJanPrcp2015, vgm('Exp'))
 plot(vJanPrcp2015 ,vJanPrcp2015.fit)
 
 texas = map('state', 'texas', fill=TRUE)
-plot(JanPrcp2015Locations, add=TRUE, pch=20)
-texas2 = data.frame(texas$x, texas$y)
+plot(JanPrcp2015Subset, add=TRUE, pch=20, col="red")
+texas2 = data.frame(LONGITUDE = texas$x, LATITUDE = texas$y)
 texas2 = na.omit(texas2)
 coordinates(texas2) = texas2[c(1,2)]
+proj4string(texas2) = CRS("+init=epsg:4326")
+texas2 = spTransform(texas2, CRS("+proj=utm +zone=13 +ellps=GRS80 +datum=NAD83 +units=m +no_defs"))
 
-texasGrid = spsample(JanPrcp2015Subset, type="regular")
 texasGrid = spsample(texas2, type="regular")
-map('state', 'texas')
-plot(texasGrid, add = T, pch=".")
+tx = as.data.frame(coordinates(texasGrid))
+names(tx) = c("LONGITUDE", "LATITUDE")
+coordinates(tx) = tx[c(1,2)]
+texasGrid = tx
+proj4string(texasGrid) = CRS("+proj=utm +zone=13 +ellps=GRS80 +datum=NAD83 +units=m +no_defs")
+
 texasMap = map2SpatialPolygons(texas, ID=texas$names)
+proj4string(texasMap) = CRS("+init=epsg:4326")
+texasMap = spTransform(texasMap, CRS("+proj=utm +zone=13 +ellps=GRS80 +datum=NAD83 +units=m +no_defs"))
 
-JanPrcp2015krige1 = krige(JanPrcp2015Subset$PRCP ~ 1, JanPrcp2015Subset, texasGrid, vJanPrcp2015.fit) #ordinary kriging
-spplot(JanPrcp2015krige1, sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
+JanPrcp2015krige1 = krige(meanPrcp ~ 1, JanPrcp2015Subset, texasGrid, vJanPrcp2015.fit)
+spplot(JanPrcp2015krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
 
-JanPrcp2015krige2 = krige(JanPrcp2015Subset$PRCP ~ 1, JanPrcp2015Subset, texasGrid, vJanPrcp2015.fit, beta=10.0) #same with simple kriging
-spplot(JanPrcp2015krige2, sp.layout=list(texasMap, first=FALSE, lwd=2, col="white")) #looks pretty much the same
-
-JanPrcp2015krige3 = krige(JanPrcp2015Subset$PRCP ~ 1, JanPrcp2015Subset, texasGrid, vJanPrcp2015.fit, nmax=20) #ordinary kriging
-spplot(JanPrcp2015krige3, sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
 
 
 
@@ -66,50 +75,46 @@ spplot(JanPrcp2015krige3, sp.layout=list(texasMap, first=FALSE, lwd=2, col="whit
   
                                   # AUGUST 2015 #
 
-# Precipitation values for August 2015 in Texas
+# Precipitation values for Auguary 2015 in Texas
 AugPrcp2015 = read_xlsx("2015/Aug/2015-Aug-Prcp.xlsx")
 AugPrcp2015$LATITUDE = as.numeric(AugPrcp2015$LATITUDE)
 AugPrcp2015$LONGITUDE = as.numeric(AugPrcp2015$LONGITUDE)
 
 #data frame with data for one day
-AugPrcp2015Subset = AugPrcp2015
-AugPrcp2015Subset$DATE = as.character(AugPrcp2015Subset$DATE)
-AugPrcp2015Subset = subset(AugPrcp2015Subset, AugPrcp2015Subset$DATE == "2015-08-01")
-AugPrcp2015Subset = na.approx(AugPrcp2015Subset)
-
-AugPrcp2015Locations = AugPrcp2015[c(2,3,4)]
-AugPrcp2015Locations = AugPrcp2015Locations[!duplicated(AugPrcp2015Locations[,c('NAME','LATITUDE','LONGITUDE')]),]
-coordinates(AugPrcp2015Locations) = AugPrcp2015Locations[c(3,2)]
-
+AugPrcp2015Subset = computePrcpAverage(AugPrcp2015)
 coordinates(AugPrcp2015Subset) = AugPrcp2015Subset[c(4,3)]
+proj4string(AugPrcp2015Subset) = CRS("+init=epsg:4326")
+AugPrcp2015Subset = spTransform(AugPrcp2015Subset, CRS("+proj=utm +zone=13 +ellps=GRS80 +datum=NAD83 +units=m +no_defs"))
 
 # variogram for the one day
-vAugPrcp2015 = variogram(AugPrcp2015Subset$PRCP ~ 1, AugPrcp2015Subset, cutoff=7)
+vAugPrcp2015 = variogram(meanPrcp ~ LATITUDE+LONGITUDE, AugPrcp2015Subset)
 plot(vAugPrcp2015)
 
-vAugPrcp2015.fit = fit.variogram(vAugPrcp2015, vgm(32, 'Sph', 1.8, 9))
+#vAugPrcp2015.fit = fit.variogram(vAugPrcp2015, vgm(42, 'Lin', 0, 32))
+vAugPrcp2015.fit = fit.variogram(vAugPrcp2015, vgm('Exp'))
 plot(vAugPrcp2015 ,vAugPrcp2015.fit)
 
 texas = map('state', 'texas', fill=TRUE)
-plot(AugPrcp2015Locations, add=TRUE, pch=20)
-texas2 = data.frame(texas$x, texas$y)
+plot(AugPrcp2015Subset, add=TRUE, pch=20, col="red")
+texas2 = data.frame(LONGITUDE = texas$x, LATITUDE = texas$y)
 texas2 = na.omit(texas2)
 coordinates(texas2) = texas2[c(1,2)]
+proj4string(texas2) = CRS("+init=epsg:4326")
+texas2 = spTransform(texas2, CRS("+proj=utm +zone=13 +ellps=GRS80 +datum=NAD83 +units=m +no_defs"))
 
-texasGrid = spsample(AugPrcp2015Subset, type="regular")
 texasGrid = spsample(texas2, type="regular")
-map('state', 'texas')
-plot(texasGrid, add = T, pch=".")
+tx = as.data.frame(coordinates(texasGrid))
+names(tx) = c("LONGITUDE", "LATITUDE")
+coordinates(tx) = tx[c(1,2)]
+texasGrid = tx
+proj4string(texasGrid) = CRS("+proj=utm +zone=13 +ellps=GRS80 +datum=NAD83 +units=m +no_defs")
+
 texasMap = map2SpatialPolygons(texas, ID=texas$names)
+proj4string(texasMap) = CRS("+init=epsg:4326")
+texasMap = spTransform(texasMap, CRS("+proj=utm +zone=13 +ellps=GRS80 +datum=NAD83 +units=m +no_defs"))
 
-AugPrcp2015krige1 = krige(AugPrcp2015Subset$PRCP ~ 1, AugPrcp2015Subset, texasGrid, vAugPrcp2015.fit) #ordinary kriging
-spplot(AugPrcp2015krige1, sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
-
-AugPrcp2015krige2 = krige(AugPrcp2015Subset$PRCP ~ 1, AugPrcp2015Subset, texasGrid, vAugPrcp2015.fit, beta=10.0) #same with simple kriging
-spplot(AugPrcp2015krige2, sp.layout=list(texasMap, first=FALSE, lwd=2, col="white")) #looks pretty much the same
-
-AugPrcp2015krige3 = krige(AugPrcp2015Subset$PRCP ~ 1, AugPrcp2015Subset, texasGrid, vAugPrcp2015.fit, nmax=20) #ordinary kriging
-spplot(AugPrcp2015krige3, sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
+AugPrcp2015krige1 = krige(meanPrcp ~ 1, AugPrcp2015Subset, texasGrid, vAugPrcp2015.fit)
+spplot(AugPrcp2015krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
 
 
 
@@ -124,51 +129,50 @@ JanPrcp2005$LATITUDE = as.numeric(JanPrcp2005$LATITUDE)
 JanPrcp2005$LONGITUDE = as.numeric(JanPrcp2005$LONGITUDE)
 
 #data frame with data for one day
-JanPrcp2005Subset = JanPrcp2005
-JanPrcp2005Subset$DATE = as.character(JanPrcp2005Subset$DATE)
-JanPrcp2005Subset = subset(JanPrcp2005Subset, JanPrcp2005Subset$DATE == "2005-01-01")
-JanPrcp2005Subset = na.approx(JanPrcp2005Subset)
-
-JanPrcp2005Locations = JanPrcp2005[c(2,3,4)]
-JanPrcp2005Locations = JanPrcp2005Locations[!duplicated(JanPrcp2005Locations[,c('NAME','LATITUDE','LONGITUDE')]),]
-coordinates(JanPrcp2005Locations) = JanPrcp2005Locations[c(3,2)]
-
+JanPrcp2005Subset = computePrcpAverage(JanPrcp2005)
 coordinates(JanPrcp2005Subset) = JanPrcp2005Subset[c(4,3)]
+proj4string(JanPrcp2005Subset) = CRS("+init=epsg:4326")
+JanPrcp2005Subset = spTransform(JanPrcp2005Subset, CRS("+proj=utm +zone=13 +ellps=GRS80 +datum=NAD83 +units=m +no_defs"))
+
+#JanPrcp2005Zero = zerodist(JanPrcp2005Subset, zero=1000)
+#JanPrcp2005Subset = JanPrcp2005Subset[-c(JanPrcp2005Zero[,1]),]
 
 # variogram for the one day
-vJanPrcp2005 = variogram(JanPrcp2005Subset$PRCP ~ 1, JanPrcp2005Subset, cutoff=2)
+vJanPrcp2005 = variogram(meanPrcp ~ LATITUDE+LONGITUDE, JanPrcp2005Subset)
 plot(vJanPrcp2005)
 
-vJanPrcp2005.fit = fit.variogram(vJanPrcp2005, vgm(32, 'Sph', 1.8, 9))
+#vJanPrcp2005.fit = fit.variogram(vJanPrcp2005, vgm(42, 'Lin', 0))
+vJanPrcp2005.fit = fit.variogram(vJanPrcp2005, vgm('Exp'))
 plot(vJanPrcp2005 ,vJanPrcp2005.fit)
 
 texas = map('state', 'texas', fill=TRUE)
-plot(JanPrcp2005Locations, add=TRUE, pch=20)
-texas2 = data.frame(texas$x, texas$y)
+plot(JanPrcp2005Subset, add=TRUE, pch=20, col="red")
+texas2 = data.frame(LONGITUDE = texas$x, LATITUDE = texas$y)
 texas2 = na.omit(texas2)
 coordinates(texas2) = texas2[c(1,2)]
+proj4string(texas2) = CRS("+init=epsg:4326")
+texas2 = spTransform(texas2, CRS("+proj=utm +zone=13 +ellps=GRS80 +datum=NAD83 +units=m +no_defs"))
 
-texasGrid = spsample(JanPrcp2005Subset, type="regular")
 texasGrid = spsample(texas2, type="regular")
-map('state', 'texas')
-plot(texasGrid, add = T, pch=".")
+tx = as.data.frame(coordinates(texasGrid))
+names(tx) = c("LONGITUDE", "LATITUDE")
+coordinates(tx) = tx[c(1,2)]
+texasGrid = tx
+proj4string(texasGrid) = CRS("+proj=utm +zone=13 +ellps=GRS80 +datum=NAD83 +units=m +no_defs")
+
 texasMap = map2SpatialPolygons(texas, ID=texas$names)
+proj4string(texasMap) = CRS("+init=epsg:4326")
+texasMap = spTransform(texasMap, CRS("+proj=utm +zone=13 +ellps=GRS80 +datum=NAD83 +units=m +no_defs"))
 
-JanPrcp2005krige1 = krige(JanPrcp2005Subset$PRCP ~ 1, JanPrcp2005Subset, texasGrid, vJanPrcp2005.fit) #ordinary kriging
-spplot(JanPrcp2005krige1, sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
-
-JanPrcp2005krige2 = krige(JanPrcp2005Subset$PRCP ~ 1, JanPrcp2005Subset, texasGrid, vJanPrcp2005.fit, beta=10.0) #same with simple kriging
-spplot(JanPrcp2005krige2, sp.layout=list(texasMap, first=FALSE, lwd=2, col="white")) #looks pretty much the same
-
-JanPrcp2005krige3 = krige(JanPrcp2005Subset$PRCP ~ 1, JanPrcp2005Subset, texasGrid, vJanPrcp2005.fit, nmax=20) #ordinary kriging
-spplot(JanPrcp2005krige3, sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
+JanPrcp2005krige1 = krige(meanPrcp ~ 1, JanPrcp2005Subset, texasGrid, vJanPrcp2005.fit)
+spplot(JanPrcp2005krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
 
 
 
 
 
 
-                                    # AUGUST 2005 #
+                                      # AUGUST 2005 #
 
 # Precipitation values for Auguary 2005 in Texas
 AugPrcp2005 = read_xlsx("2005/Aug/2005-Aug-Prcp.xlsx")
@@ -176,44 +180,40 @@ AugPrcp2005$LATITUDE = as.numeric(AugPrcp2005$LATITUDE)
 AugPrcp2005$LONGITUDE = as.numeric(AugPrcp2005$LONGITUDE)
 
 #data frame with data for one day
-AugPrcp2005Subset = AugPrcp2005
-AugPrcp2005Subset$DATE = as.character(AugPrcp2005Subset$DATE)
-AugPrcp2005Subset = subset(AugPrcp2005Subset, AugPrcp2005Subset$DATE == "2005-08-01")
-AugPrcp2005Subset = na.approx(AugPrcp2005Subset)
-
-AugPrcp2005Locations = AugPrcp2005[c(2,3,4)]
-AugPrcp2005Locations = AugPrcp2005Locations[!duplicated(AugPrcp2005Locations[,c('NAME','LATITUDE','LONGITUDE')]),]
-coordinates(AugPrcp2005Locations) = AugPrcp2005Locations[c(3,2)]
-
+AugPrcp2005Subset = computePrcpAverage(AugPrcp2005)
 coordinates(AugPrcp2005Subset) = AugPrcp2005Subset[c(4,3)]
+proj4string(AugPrcp2005Subset) = CRS("+init=epsg:4326")
+AugPrcp2005Subset = spTransform(AugPrcp2005Subset, CRS("+proj=utm +zone=13 +ellps=GRS80 +datum=NAD83 +units=m +no_defs"))
 
 # variogram for the one day
-vAugPrcp2005 = variogram(AugPrcp2005Subset$PRCP ~ 1, AugPrcp2005Subset, cutoff=2)
+vAugPrcp2005 = variogram(meanPrcp ~ LATITUDE+LONGITUDE, AugPrcp2005Subset)
 plot(vAugPrcp2005)
 
-vAugPrcp2005.fit = fit.variogram(vAugPrcp2005, vgm(32, 'Sph', 1.8, 9))
+#vAugPrcp2005.fit = fit.variogram(vAugPrcp2005, vgm(42, 'Lin', 0, 32))
+vAugPrcp2005.fit = fit.variogram(vAugPrcp2005, vgm('Exp'))
 plot(vAugPrcp2005 ,vAugPrcp2005.fit)
 
 texas = map('state', 'texas', fill=TRUE)
-plot(AugPrcp2005Locations, add=TRUE, pch=20)
-texas2 = data.frame(texas$x, texas$y)
+plot(AugPrcp2005Subset, add=TRUE, pch=20, col="red")
+texas2 = data.frame(LONGITUDE = texas$x, LATITUDE = texas$y)
 texas2 = na.omit(texas2)
 coordinates(texas2) = texas2[c(1,2)]
+proj4string(texas2) = CRS("+init=epsg:4326")
+texas2 = spTransform(texas2, CRS("+proj=utm +zone=13 +ellps=GRS80 +datum=NAD83 +units=m +no_defs"))
 
-texasGrid = spsample(AugPrcp2005Subset, type="regular")
 texasGrid = spsample(texas2, type="regular")
-map('state', 'texas')
-plot(texasGrid, add = T, pch=".")
+tx = as.data.frame(coordinates(texasGrid))
+names(tx) = c("LONGITUDE", "LATITUDE")
+coordinates(tx) = tx[c(1,2)]
+texasGrid = tx
+proj4string(texasGrid) = CRS("+proj=utm +zone=13 +ellps=GRS80 +datum=NAD83 +units=m +no_defs")
+
 texasMap = map2SpatialPolygons(texas, ID=texas$names)
+proj4string(texasMap) = CRS("+init=epsg:4326")
+texasMap = spTransform(texasMap, CRS("+proj=utm +zone=13 +ellps=GRS80 +datum=NAD83 +units=m +no_defs"))
 
-AugPrcp2005krige1 = krige(AugPrcp2005Subset$PRCP ~ 1, AugPrcp2005Subset, texasGrid, vAugPrcp2005.fit) #ordinary kriging
-spplot(AugPrcp2005krige1, sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
-
-AugPrcp2005krige2 = krige(AugPrcp2005Subset$PRCP ~ 1, AugPrcp2005Subset, texasGrid, vAugPrcp2005.fit, beta=10.0) #same with simple kriging
-spplot(AugPrcp2005krige2, sp.layout=list(texasMap, first=FALSE, lwd=2, col="white")) #looks pretty much the same
-
-AugPrcp2005krige3 = krige(AugPrcp2005Subset$PRCP ~ 1, AugPrcp2005Subset, texasGrid, vAugPrcp2005.fit, nmax=20) #ordinary kriging
-spplot(AugPrcp2005krige3, sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
+AugPrcp2005krige1 = krige(meanPrcp ~ 1, AugPrcp2005Subset, texasGrid, vAugPrcp2005.fit)
+spplot(AugPrcp2005krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
 
 
 
@@ -227,50 +227,50 @@ JanPrcp1995$LATITUDE = as.numeric(JanPrcp1995$LATITUDE)
 JanPrcp1995$LONGITUDE = as.numeric(JanPrcp1995$LONGITUDE)
 
 #data frame with data for one day
-JanPrcp1995Subset = JanPrcp1995
-JanPrcp1995Subset$DATE = as.character(JanPrcp1995Subset$DATE)
-JanPrcp1995Subset = subset(JanPrcp1995Subset, JanPrcp1995Subset$DATE == "1995-01-01")
-JanPrcp1995Subset = na.approx(JanPrcp1995Subset)
-
-JanPrcp1995Locations = JanPrcp1995[c(2,3,4)]
-JanPrcp1995Locations = JanPrcp1995Locations[!duplicated(JanPrcp1995Locations[,c('NAME','LATITUDE','LONGITUDE')]),]
-coordinates(JanPrcp1995Locations) = JanPrcp1995Locations[c(3,2)]
-
+JanPrcp1995Subset = computePrcpAverage(JanPrcp1995)
 coordinates(JanPrcp1995Subset) = JanPrcp1995Subset[c(4,3)]
+proj4string(JanPrcp1995Subset) = CRS("+init=epsg:4326")
+JanPrcp1995Subset = spTransform(JanPrcp1995Subset, CRS("+proj=utm +zone=13 +ellps=GRS80 +datum=NAD83 +units=m +no_defs"))
+
+#JanPrcp1995Zero = zerodist(JanPrcp1995Subset, zero=1000)
+#JanPrcp1995Subset = JanPrcp1995Subset[-c(JanPrcp1995Zero[,1]),]
 
 # variogram for the one day
-vJanPrcp1995 = variogram(JanPrcp1995Subset$PRCP ~ 1, JanPrcp1995Subset, cutoff=2)
+vJanPrcp1995 = variogram(meanPrcp ~ LATITUDE+LONGITUDE, JanPrcp1995Subset)
 plot(vJanPrcp1995)
 
-vJanPrcp1995.fit = fit.variogram(vJanPrcp1995, vgm(32, 'Sph', 1.8, 9))
+#vJanPrcp1995.fit = fit.variogram(vJanPrcp1995, vgm(42, 'Lin', 0))
+vJanPrcp1995.fit = fit.variogram(vJanPrcp1995, vgm('Exp'))
 plot(vJanPrcp1995 ,vJanPrcp1995.fit)
 
 texas = map('state', 'texas', fill=TRUE)
-plot(JanPrcp1995Locations, add=TRUE, pch=20)
-texas2 = data.frame(texas$x, texas$y)
+plot(JanPrcp1995Subset, add=TRUE, pch=20, col="red")
+texas2 = data.frame(LONGITUDE = texas$x, LATITUDE = texas$y)
 texas2 = na.omit(texas2)
 coordinates(texas2) = texas2[c(1,2)]
+proj4string(texas2) = CRS("+init=epsg:4326")
+texas2 = spTransform(texas2, CRS("+proj=utm +zone=13 +ellps=GRS80 +datum=NAD83 +units=m +no_defs"))
 
-texasGrid = spsample(JanPrcp1995Subset, type="regular")
 texasGrid = spsample(texas2, type="regular")
-map('state', 'texas')
-plot(texasGrid, add = T, pch=".")
+tx = as.data.frame(coordinates(texasGrid))
+names(tx) = c("LONGITUDE", "LATITUDE")
+coordinates(tx) = tx[c(1,2)]
+texasGrid = tx
+proj4string(texasGrid) = CRS("+proj=utm +zone=13 +ellps=GRS80 +datum=NAD83 +units=m +no_defs")
+
 texasMap = map2SpatialPolygons(texas, ID=texas$names)
+proj4string(texasMap) = CRS("+init=epsg:4326")
+texasMap = spTransform(texasMap, CRS("+proj=utm +zone=13 +ellps=GRS80 +datum=NAD83 +units=m +no_defs"))
 
-JanPrcp1995krige1 = krige(JanPrcp1995Subset$PRCP ~ 1, JanPrcp1995Subset, texasGrid, vJanPrcp1995.fit) #ordinary kriging
-spplot(JanPrcp1995krige1, sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
-
-JanPrcp1995krige2 = krige(JanPrcp1995Subset$PRCP ~ 1, JanPrcp1995Subset, texasGrid, vJanPrcp1995.fit, beta=10.0) #same with simple kriging
-spplot(JanPrcp1995krige2, sp.layout=list(texasMap, first=FALSE, lwd=2, col="white")) #looks pretty much the same
-
-JanPrcp1995krige3 = krige(JanPrcp1995Subset$PRCP ~ 1, JanPrcp1995Subset, texasGrid, vJanPrcp1995.fit, nmax=20) #ordinary kriging
-spplot(JanPrcp1995krige3, sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
+JanPrcp1995krige1 = krige(meanPrcp ~ 1, JanPrcp1995Subset, texasGrid, vJanPrcp1995.fit)
+spplot(JanPrcp1995krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
 
 
 
 
 
-                                            # AUGUST 1995 #
+
+                                          # AUGUST 1995 #
 
 # Precipitation values for Auguary 1995 in Texas
 AugPrcp1995 = read_xlsx("1995/Aug/1995-Aug-Prcp.xlsx")
@@ -278,44 +278,40 @@ AugPrcp1995$LATITUDE = as.numeric(AugPrcp1995$LATITUDE)
 AugPrcp1995$LONGITUDE = as.numeric(AugPrcp1995$LONGITUDE)
 
 #data frame with data for one day
-AugPrcp1995Subset = AugPrcp1995
-AugPrcp1995Subset$DATE = as.character(AugPrcp1995Subset$DATE)
-AugPrcp1995Subset = subset(AugPrcp1995Subset, AugPrcp1995Subset$DATE == "1995-08-01")
-AugPrcp1995Subset = na.approx(AugPrcp1995Subset)
-
-AugPrcp1995Locations = AugPrcp1995[c(2,3,4)]
-AugPrcp1995Locations = AugPrcp1995Locations[!duplicated(AugPrcp1995Locations[,c('NAME','LATITUDE','LONGITUDE')]),]
-coordinates(AugPrcp1995Locations) = AugPrcp1995Locations[c(3,2)]
-
+AugPrcp1995Subset = computePrcpAverage(AugPrcp1995)
 coordinates(AugPrcp1995Subset) = AugPrcp1995Subset[c(4,3)]
+proj4string(AugPrcp1995Subset) = CRS("+init=epsg:4326")
+AugPrcp1995Subset = spTransform(AugPrcp1995Subset, CRS("+proj=utm +zone=13 +ellps=GRS80 +datum=NAD83 +units=m +no_defs"))
 
 # variogram for the one day
-vAugPrcp1995 = variogram(AugPrcp1995Subset$PRCP ~ 1, AugPrcp1995Subset, cutoff=2)
+vAugPrcp1995 = variogram(meanPrcp ~ LATITUDE+LONGITUDE, AugPrcp1995Subset)
 plot(vAugPrcp1995)
 
-vAugPrcp1995.fit = fit.variogram(vAugPrcp1995, vgm(32, 'Sph', 1.8, 9))
+#vAugPrcp1995.fit = fit.variogram(vAugPrcp1995, vgm(42, 'Lin', 0, 32))
+vAugPrcp1995.fit = fit.variogram(vAugPrcp1995, vgm('Exp'))
 plot(vAugPrcp1995 ,vAugPrcp1995.fit)
 
 texas = map('state', 'texas', fill=TRUE)
-plot(AugPrcp1995Locations, add=TRUE, pch=20)
-texas2 = data.frame(texas$x, texas$y)
+plot(AugPrcp1995Subset, add=TRUE, pch=20, col="red")
+texas2 = data.frame(LONGITUDE = texas$x, LATITUDE = texas$y)
 texas2 = na.omit(texas2)
 coordinates(texas2) = texas2[c(1,2)]
+proj4string(texas2) = CRS("+init=epsg:4326")
+texas2 = spTransform(texas2, CRS("+proj=utm +zone=13 +ellps=GRS80 +datum=NAD83 +units=m +no_defs"))
 
-texasGrid = spsample(AugPrcp1995Subset, type="regular")
 texasGrid = spsample(texas2, type="regular")
-map('state', 'texas')
-plot(texasGrid, add = T, pch=".")
+tx = as.data.frame(coordinates(texasGrid))
+names(tx) = c("LONGITUDE", "LATITUDE")
+coordinates(tx) = tx[c(1,2)]
+texasGrid = tx
+proj4string(texasGrid) = CRS("+proj=utm +zone=13 +ellps=GRS80 +datum=NAD83 +units=m +no_defs")
+
 texasMap = map2SpatialPolygons(texas, ID=texas$names)
+proj4string(texasMap) = CRS("+init=epsg:4326")
+texasMap = spTransform(texasMap, CRS("+proj=utm +zone=13 +ellps=GRS80 +datum=NAD83 +units=m +no_defs"))
 
-AugPrcp1995krige1 = krige(AugPrcp1995Subset$PRCP ~ 1, AugPrcp1995Subset, texasGrid, vAugPrcp1995.fit) #ordinary kriging
-spplot(AugPrcp1995krige1, sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
-
-AugPrcp1995krige2 = krige(AugPrcp1995Subset$PRCP ~ 1, AugPrcp1995Subset, texasGrid, vAugPrcp1995.fit, beta=10.0) #same with simple kriging
-spplot(AugPrcp1995krige2, sp.layout=list(texasMap, first=FALSE, lwd=2, col="white")) #looks pretty much the same
-
-AugPrcp1995krige3 = krige(AugPrcp1995Subset$PRCP ~ 1, AugPrcp1995Subset, texasGrid, vAugPrcp1995.fit, nmax=20) #ordinary kriging
-spplot(AugPrcp1995krige3, sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
+AugPrcp1995krige1 = krige(meanPrcp ~ 1, AugPrcp1995Subset, texasGrid, vAugPrcp1995.fit)
+spplot(AugPrcp1995krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
 
 
 
@@ -329,44 +325,43 @@ JanPrcp1985$LATITUDE = as.numeric(JanPrcp1985$LATITUDE)
 JanPrcp1985$LONGITUDE = as.numeric(JanPrcp1985$LONGITUDE)
 
 #data frame with data for one day
-JanPrcp1985Subset = JanPrcp1985
-JanPrcp1985Subset$DATE = as.character(JanPrcp1985Subset$DATE)
-JanPrcp1985Subset = subset(JanPrcp1985Subset, JanPrcp1985Subset$DATE == "1985-01-01")
-JanPrcp1985Subset = na.approx(JanPrcp1985Subset)
-
-JanPrcp1985Locations = JanPrcp1985[c(2,3,4)]
-JanPrcp1985Locations = JanPrcp1985Locations[!duplicated(JanPrcp1985Locations[,c('NAME','LATITUDE','LONGITUDE')]),]
-coordinates(JanPrcp1985Locations) = JanPrcp1985Locations[c(3,2)]
-
+JanPrcp1985Subset = computePrcpAverage(JanPrcp1985)
 coordinates(JanPrcp1985Subset) = JanPrcp1985Subset[c(4,3)]
+proj4string(JanPrcp1985Subset) = CRS("+init=epsg:4326")
+JanPrcp1985Subset = spTransform(JanPrcp1985Subset, CRS("+proj=utm +zone=13 +ellps=GRS80 +datum=NAD83 +units=m +no_defs"))
+
+#JanPrcp1985Zero = zerodist(JanPrcp1985Subset, zero=1000)
+#JanPrcp1985Subset = JanPrcp1985Subset[-c(JanPrcp1985Zero[,1]),]
 
 # variogram for the one day
-vJanPrcp1985 = variogram(JanPrcp1985Subset$PRCP ~ 1, JanPrcp1985Subset, cutoff=2)
+vJanPrcp1985 = variogram(meanPrcp ~ LATITUDE+LONGITUDE, JanPrcp1985Subset)
 plot(vJanPrcp1985)
 
-vJanPrcp1985.fit = fit.variogram(vJanPrcp1985, vgm(32, 'Sph', 1.8, 9))
+#vJanPrcp1985.fit = fit.variogram(vJanPrcp1985, vgm(42, 'Lin', 0))
+vJanPrcp1985.fit = fit.variogram(vJanPrcp1985, vgm('Exp'))
 plot(vJanPrcp1985 ,vJanPrcp1985.fit)
 
 texas = map('state', 'texas', fill=TRUE)
-plot(JanPrcp1985Locations, add=TRUE, pch=20)
-texas2 = data.frame(texas$x, texas$y)
+plot(JanPrcp1985Subset, add=TRUE, pch=20, col="red")
+texas2 = data.frame(LONGITUDE = texas$x, LATITUDE = texas$y)
 texas2 = na.omit(texas2)
 coordinates(texas2) = texas2[c(1,2)]
+proj4string(texas2) = CRS("+init=epsg:4326")
+texas2 = spTransform(texas2, CRS("+proj=utm +zone=13 +ellps=GRS80 +datum=NAD83 +units=m +no_defs"))
 
-texasGrid = spsample(JanPrcp1985Subset, type="regular")
 texasGrid = spsample(texas2, type="regular")
-map('state', 'texas')
-plot(texasGrid, add = T, pch=".")
+tx = as.data.frame(coordinates(texasGrid))
+names(tx) = c("LONGITUDE", "LATITUDE")
+coordinates(tx) = tx[c(1,2)]
+texasGrid = tx
+proj4string(texasGrid) = CRS("+proj=utm +zone=13 +ellps=GRS80 +datum=NAD83 +units=m +no_defs")
+
 texasMap = map2SpatialPolygons(texas, ID=texas$names)
+proj4string(texasMap) = CRS("+init=epsg:4326")
+texasMap = spTransform(texasMap, CRS("+proj=utm +zone=13 +ellps=GRS80 +datum=NAD83 +units=m +no_defs"))
 
-JanPrcp1985krige1 = krige(JanPrcp1985Subset$PRCP ~ 1, JanPrcp1985Subset, texasGrid, vJanPrcp1985.fit) #ordinary kriging
-spplot(JanPrcp1985krige1, sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
-
-JanPrcp1985krige2 = krige(JanPrcp1985Subset$PRCP ~ 1, JanPrcp1985Subset, texasGrid, vJanPrcp1985.fit, beta=10.0) #same with simple kriging
-spplot(JanPrcp1985krige2, sp.layout=list(texasMap, first=FALSE, lwd=2, col="white")) #looks pretty much the same
-
-JanPrcp1985krige3 = krige(JanPrcp1985Subset$PRCP ~ 1, JanPrcp1985Subset, texasGrid, vJanPrcp1985.fit, nmax=20) #ordinary kriging
-spplot(JanPrcp1985krige3, sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
+JanPrcp1985krige1 = krige(meanPrcp ~ 1, JanPrcp1985Subset, texasGrid, vJanPrcp1985.fit)
+spplot(JanPrcp1985krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
 
 
 
@@ -381,44 +376,40 @@ AugPrcp1985$LATITUDE = as.numeric(AugPrcp1985$LATITUDE)
 AugPrcp1985$LONGITUDE = as.numeric(AugPrcp1985$LONGITUDE)
 
 #data frame with data for one day
-AugPrcp1985Subset = AugPrcp1985
-AugPrcp1985Subset$DATE = as.character(AugPrcp1985Subset$DATE)
-AugPrcp1985Subset = subset(AugPrcp1985Subset, AugPrcp1985Subset$DATE == "1985-08-01")
-AugPrcp1985Subset = na.approx(AugPrcp1985Subset)
-
-AugPrcp1985Locations = AugPrcp1985[c(2,3,4)]
-AugPrcp1985Locations = AugPrcp1985Locations[!duplicated(AugPrcp1985Locations[,c('NAME','LATITUDE','LONGITUDE')]),]
-coordinates(AugPrcp1985Locations) = AugPrcp1985Locations[c(3,2)]
-
+AugPrcp1985Subset = computePrcpAverage(AugPrcp1985)
 coordinates(AugPrcp1985Subset) = AugPrcp1985Subset[c(4,3)]
+proj4string(AugPrcp1985Subset) = CRS("+init=epsg:4326")
+AugPrcp1985Subset = spTransform(AugPrcp1985Subset, CRS("+proj=utm +zone=13 +ellps=GRS80 +datum=NAD83 +units=m +no_defs"))
 
 # variogram for the one day
-vAugPrcp1985 = variogram(AugPrcp1985Subset$PRCP ~ 1, AugPrcp1985Subset, cutoff=2)
+vAugPrcp1985 = variogram(meanPrcp ~ LATITUDE+LONGITUDE, AugPrcp1985Subset)
 plot(vAugPrcp1985)
 
-vAugPrcp1985.fit = fit.variogram(vAugPrcp1985, vgm(32, 'Sph', 1.8, 9))
+#vAugPrcp1985.fit = fit.variogram(vAugPrcp1985, vgm(42, 'Lin', 0, 32))
+vAugPrcp1985.fit = fit.variogram(vAugPrcp1985, vgm('Exp'))
 plot(vAugPrcp1985 ,vAugPrcp1985.fit)
 
 texas = map('state', 'texas', fill=TRUE)
-plot(AugPrcp1985Locations, add=TRUE, pch=20)
-texas2 = data.frame(texas$x, texas$y)
+plot(AugPrcp1985Subset, add=TRUE, pch=20, col="red")
+texas2 = data.frame(LONGITUDE = texas$x, LATITUDE = texas$y)
 texas2 = na.omit(texas2)
 coordinates(texas2) = texas2[c(1,2)]
+proj4string(texas2) = CRS("+init=epsg:4326")
+texas2 = spTransform(texas2, CRS("+proj=utm +zone=13 +ellps=GRS80 +datum=NAD83 +units=m +no_defs"))
 
-texasGrid = spsample(AugPrcp1985Subset, type="regular")
 texasGrid = spsample(texas2, type="regular")
-map('state', 'texas')
-plot(texasGrid, add = T, pch=".")
+tx = as.data.frame(coordinates(texasGrid))
+names(tx) = c("LONGITUDE", "LATITUDE")
+coordinates(tx) = tx[c(1,2)]
+texasGrid = tx
+proj4string(texasGrid) = CRS("+proj=utm +zone=13 +ellps=GRS80 +datum=NAD83 +units=m +no_defs")
+
 texasMap = map2SpatialPolygons(texas, ID=texas$names)
+proj4string(texasMap) = CRS("+init=epsg:4326")
+texasMap = spTransform(texasMap, CRS("+proj=utm +zone=13 +ellps=GRS80 +datum=NAD83 +units=m +no_defs"))
 
-AugPrcp1985krige1 = krige(AugPrcp1985Subset$PRCP ~ 1, AugPrcp1985Subset, texasGrid, vAugPrcp1985.fit) #ordinary kriging
-spplot(AugPrcp1985krige1, sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
-
-AugPrcp1985krige2 = krige(AugPrcp1985Subset$PRCP ~ 1, AugPrcp1985Subset, texasGrid, vAugPrcp1985.fit, beta=10.0) #same with simple kriging
-spplot(AugPrcp1985krige2, sp.layout=list(texasMap, first=FALSE, lwd=2, col="white")) #looks pretty much the same
-
-AugPrcp1985krige3 = krige(AugPrcp1985Subset$PRCP ~ 1, AugPrcp1985Subset, texasGrid, vAugPrcp1985.fit, nmax=20) #ordinary kriging
-spplot(AugPrcp1985krige3, sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
+AugPrcp1985krige1 = krige(meanPrcp ~ 1, AugPrcp1985Subset, texasGrid, vAugPrcp1985.fit)
+spplot(AugPrcp1985krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
 
 
 
@@ -432,50 +423,50 @@ JanPrcp1975$LATITUDE = as.numeric(JanPrcp1975$LATITUDE)
 JanPrcp1975$LONGITUDE = as.numeric(JanPrcp1975$LONGITUDE)
 
 #data frame with data for one day
-JanPrcp1975Subset = JanPrcp1975
-JanPrcp1975Subset$DATE = as.character(JanPrcp1975Subset$DATE)
-JanPrcp1975Subset = subset(JanPrcp1975Subset, JanPrcp1975Subset$DATE == "1975-01-01")
-JanPrcp1975Subset = na.approx(JanPrcp1975Subset)
-
-JanPrcp1975Locations = JanPrcp1975[c(2,3,4)]
-JanPrcp1975Locations = JanPrcp1975Locations[!duplicated(JanPrcp1975Locations[,c('NAME','LATITUDE','LONGITUDE')]),]
-coordinates(JanPrcp1975Locations) = JanPrcp1975Locations[c(3,2)]
-
+JanPrcp1975Subset = computePrcpAverage(JanPrcp1975)
 coordinates(JanPrcp1975Subset) = JanPrcp1975Subset[c(4,3)]
+proj4string(JanPrcp1975Subset) = CRS("+init=epsg:4326")
+JanPrcp1975Subset = spTransform(JanPrcp1975Subset, CRS("+proj=utm +zone=13 +ellps=GRS80 +datum=NAD83 +units=m +no_defs"))
+
+#JanPrcp1975Zero = zerodist(JanPrcp1975Subset, zero=1000)
+#JanPrcp1975Subset = JanPrcp1975Subset[-c(JanPrcp1975Zero[,1]),]
 
 # variogram for the one day
-vJanPrcp1975 = variogram(JanPrcp1975Subset$PRCP ~ 1, JanPrcp1975Subset, cutoff=2)
+vJanPrcp1975 = variogram(meanPrcp ~ LATITUDE+LONGITUDE, JanPrcp1975Subset)
 plot(vJanPrcp1975)
 
-vJanPrcp1975.fit = fit.variogram(vJanPrcp1975, vgm(32, 'Sph', 1.8, 9))
+#vJanPrcp1975.fit = fit.variogram(vJanPrcp1975, vgm(42, 'Lin', 0))
+vJanPrcp1975.fit = fit.variogram(vJanPrcp1975, vgm('Exp'))
 plot(vJanPrcp1975 ,vJanPrcp1975.fit)
 
 texas = map('state', 'texas', fill=TRUE)
-plot(JanPrcp1975Locations, add=TRUE, pch=20)
-texas2 = data.frame(texas$x, texas$y)
+plot(JanPrcp1975Subset, add=TRUE, pch=20, col="red")
+texas2 = data.frame(LONGITUDE = texas$x, LATITUDE = texas$y)
 texas2 = na.omit(texas2)
 coordinates(texas2) = texas2[c(1,2)]
+proj4string(texas2) = CRS("+init=epsg:4326")
+texas2 = spTransform(texas2, CRS("+proj=utm +zone=13 +ellps=GRS80 +datum=NAD83 +units=m +no_defs"))
 
-texasGrid = spsample(JanPrcp1975Subset, type="regular")
 texasGrid = spsample(texas2, type="regular")
-map('state', 'texas')
-plot(texasGrid, add = T, pch=".")
+tx = as.data.frame(coordinates(texasGrid))
+names(tx) = c("LONGITUDE", "LATITUDE")
+coordinates(tx) = tx[c(1,2)]
+texasGrid = tx
+proj4string(texasGrid) = CRS("+proj=utm +zone=13 +ellps=GRS80 +datum=NAD83 +units=m +no_defs")
+
 texasMap = map2SpatialPolygons(texas, ID=texas$names)
+proj4string(texasMap) = CRS("+init=epsg:4326")
+texasMap = spTransform(texasMap, CRS("+proj=utm +zone=13 +ellps=GRS80 +datum=NAD83 +units=m +no_defs"))
 
-JanPrcp1975krige1 = krige(JanPrcp1975Subset$PRCP ~ 1, JanPrcp1975Subset, texasGrid, vJanPrcp1975.fit) #ordinary kriging
-spplot(JanPrcp1975krige1, sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
-
-JanPrcp1975krige2 = krige(JanPrcp1975Subset$PRCP ~ 1, JanPrcp1975Subset, texasGrid, vJanPrcp1975.fit, beta=10.0) #same with simple kriging
-spplot(JanPrcp1975krige2, sp.layout=list(texasMap, first=FALSE, lwd=2, col="white")) #looks pretty much the same
-
-JanPrcp1975krige3 = krige(JanPrcp1975Subset$PRCP ~ 1, JanPrcp1975Subset, texasGrid, vJanPrcp1975.fit, nmax=20) #ordinary kriging
-spplot(JanPrcp1975krige3, sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
+JanPrcp1975krige1 = krige(meanPrcp ~ 1, JanPrcp1975Subset, texasGrid, vJanPrcp1975.fit)
+spplot(JanPrcp1975krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
 
 
 
 
 
-                                      # AUGUST 1975 #
+
+                                          # AUGUST 1975 #
 
 # Precipitation values for Auguary 1975 in Texas
 AugPrcp1975 = read_xlsx("1975/Aug/1975-Aug-Prcp.xlsx")
@@ -483,44 +474,40 @@ AugPrcp1975$LATITUDE = as.numeric(AugPrcp1975$LATITUDE)
 AugPrcp1975$LONGITUDE = as.numeric(AugPrcp1975$LONGITUDE)
 
 #data frame with data for one day
-AugPrcp1975Subset = AugPrcp1975
-AugPrcp1975Subset$DATE = as.character(AugPrcp1975Subset$DATE)
-AugPrcp1975Subset = subset(AugPrcp1975Subset, AugPrcp1975Subset$DATE == "1975-08-01")
-AugPrcp1975Subset = na.approx(AugPrcp1975Subset)
-
-AugPrcp1975Locations = AugPrcp1975[c(2,3,4)]
-AugPrcp1975Locations = AugPrcp1975Locations[!duplicated(AugPrcp1975Locations[,c('NAME','LATITUDE','LONGITUDE')]),]
-coordinates(AugPrcp1975Locations) = AugPrcp1975Locations[c(3,2)]
-
+AugPrcp1975Subset = computePrcpAverage(AugPrcp1975)
 coordinates(AugPrcp1975Subset) = AugPrcp1975Subset[c(4,3)]
+proj4string(AugPrcp1975Subset) = CRS("+init=epsg:4326")
+AugPrcp1975Subset = spTransform(AugPrcp1975Subset, CRS("+proj=utm +zone=13 +ellps=GRS80 +datum=NAD83 +units=m +no_defs"))
 
 # variogram for the one day
-vAugPrcp1975 = variogram(AugPrcp1975Subset$PRCP ~ 1, AugPrcp1975Subset, cutoff=2)
+vAugPrcp1975 = variogram(meanPrcp ~ LATITUDE+LONGITUDE, AugPrcp1975Subset)
 plot(vAugPrcp1975)
 
-vAugPrcp1975.fit = fit.variogram(vAugPrcp1975, vgm(32, 'Sph', 1.8, 9))
+#vAugPrcp1975.fit = fit.variogram(vAugPrcp1975, vgm(42, 'Lin', 0, 32))
+vAugPrcp1975.fit = fit.variogram(vAugPrcp1975, vgm('Exp'))
 plot(vAugPrcp1975 ,vAugPrcp1975.fit)
 
 texas = map('state', 'texas', fill=TRUE)
-plot(AugPrcp1975Locations, add=TRUE, pch=20)
-texas2 = data.frame(texas$x, texas$y)
+plot(AugPrcp1975Subset, add=TRUE, pch=20, col="red")
+texas2 = data.frame(LONGITUDE = texas$x, LATITUDE = texas$y)
 texas2 = na.omit(texas2)
 coordinates(texas2) = texas2[c(1,2)]
+proj4string(texas2) = CRS("+init=epsg:4326")
+texas2 = spTransform(texas2, CRS("+proj=utm +zone=13 +ellps=GRS80 +datum=NAD83 +units=m +no_defs"))
 
-texasGrid = spsample(AugPrcp1975Subset, type="regular")
 texasGrid = spsample(texas2, type="regular")
-map('state', 'texas')
-plot(texasGrid, add = T, pch=".")
+tx = as.data.frame(coordinates(texasGrid))
+names(tx) = c("LONGITUDE", "LATITUDE")
+coordinates(tx) = tx[c(1,2)]
+texasGrid = tx
+proj4string(texasGrid) = CRS("+proj=utm +zone=13 +ellps=GRS80 +datum=NAD83 +units=m +no_defs")
+
 texasMap = map2SpatialPolygons(texas, ID=texas$names)
+proj4string(texasMap) = CRS("+init=epsg:4326")
+texasMap = spTransform(texasMap, CRS("+proj=utm +zone=13 +ellps=GRS80 +datum=NAD83 +units=m +no_defs"))
 
-AugPrcp1975krige1 = krige(AugPrcp1975Subset$PRCP ~ 1, AugPrcp1975Subset, texasGrid, vAugPrcp1975.fit) #ordinary kriging
-spplot(AugPrcp1975krige1, sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
-
-AugPrcp1975krige2 = krige(AugPrcp1975Subset$PRCP ~ 1, AugPrcp1975Subset, texasGrid, vAugPrcp1975.fit, beta=10.0) #same with simple kriging
-spplot(AugPrcp1975krige2, sp.layout=list(texasMap, first=FALSE, lwd=2, col="white")) #looks pretty much the same
-
-AugPrcp1975krige3 = krige(AugPrcp1975Subset$PRCP ~ 1, AugPrcp1975Subset, texasGrid, vAugPrcp1975.fit, nmax=20) #ordinary kriging
-spplot(AugPrcp1975krige3, sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
+AugPrcp1975krige1 = krige(meanPrcp ~ 1, AugPrcp1975Subset, texasGrid, vAugPrcp1975.fit)
+spplot(AugPrcp1975krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
 
 
 
@@ -534,50 +521,50 @@ JanPrcp1965$LATITUDE = as.numeric(JanPrcp1965$LATITUDE)
 JanPrcp1965$LONGITUDE = as.numeric(JanPrcp1965$LONGITUDE)
 
 #data frame with data for one day
-JanPrcp1965Subset = JanPrcp1965
-JanPrcp1965Subset$DATE = as.character(JanPrcp1965Subset$DATE)
-JanPrcp1965Subset = subset(JanPrcp1965Subset, JanPrcp1965Subset$DATE == "1965-01-01")
-JanPrcp1965Subset = na.approx(JanPrcp1965Subset)
-
-JanPrcp1965Locations = JanPrcp1965[c(2,3,4)]
-JanPrcp1965Locations = JanPrcp1965Locations[!duplicated(JanPrcp1965Locations[,c('NAME','LATITUDE','LONGITUDE')]),]
-coordinates(JanPrcp1965Locations) = JanPrcp1965Locations[c(3,2)]
-
+JanPrcp1965Subset = computePrcpAverage(JanPrcp1965)
 coordinates(JanPrcp1965Subset) = JanPrcp1965Subset[c(4,3)]
+proj4string(JanPrcp1965Subset) = CRS("+init=epsg:4326")
+JanPrcp1965Subset = spTransform(JanPrcp1965Subset, CRS("+proj=utm +zone=13 +ellps=GRS80 +datum=NAD83 +units=m +no_defs"))
+
+#JanPrcp1965Zero = zerodist(JanPrcp1965Subset, zero=1000)
+#JanPrcp1965Subset = JanPrcp1965Subset[-c(JanPrcp1965Zero[,1]),]
 
 # variogram for the one day
-vJanPrcp1965 = variogram(JanPrcp1965Subset$PRCP ~ 1, JanPrcp1965Subset, cutoff=2)
+vJanPrcp1965 = variogram(meanPrcp ~ LATITUDE+LONGITUDE, JanPrcp1965Subset)
 plot(vJanPrcp1965)
 
-vJanPrcp1965.fit = fit.variogram(vJanPrcp1965, vgm(32, 'Sph', 1.8, 9))
+#vJanPrcp1965.fit = fit.variogram(vJanPrcp1965, vgm(42, 'Lin', 0))
+vJanPrcp1965.fit = fit.variogram(vJanPrcp1965, vgm('Exp'))
 plot(vJanPrcp1965 ,vJanPrcp1965.fit)
 
 texas = map('state', 'texas', fill=TRUE)
-plot(JanPrcp1965Locations, add=TRUE, pch=20)
-texas2 = data.frame(texas$x, texas$y)
+plot(JanPrcp1965Subset, add=TRUE, pch=20, col="red")
+texas2 = data.frame(LONGITUDE = texas$x, LATITUDE = texas$y)
 texas2 = na.omit(texas2)
 coordinates(texas2) = texas2[c(1,2)]
+proj4string(texas2) = CRS("+init=epsg:4326")
+texas2 = spTransform(texas2, CRS("+proj=utm +zone=13 +ellps=GRS80 +datum=NAD83 +units=m +no_defs"))
 
-texasGrid = spsample(JanPrcp1965Subset, type="regular")
 texasGrid = spsample(texas2, type="regular")
-map('state', 'texas')
-plot(texasGrid, add = T, pch=".")
+tx = as.data.frame(coordinates(texasGrid))
+names(tx) = c("LONGITUDE", "LATITUDE")
+coordinates(tx) = tx[c(1,2)]
+texasGrid = tx
+proj4string(texasGrid) = CRS("+proj=utm +zone=13 +ellps=GRS80 +datum=NAD83 +units=m +no_defs")
+
 texasMap = map2SpatialPolygons(texas, ID=texas$names)
+proj4string(texasMap) = CRS("+init=epsg:4326")
+texasMap = spTransform(texasMap, CRS("+proj=utm +zone=13 +ellps=GRS80 +datum=NAD83 +units=m +no_defs"))
 
-JanPrcp1965krige1 = krige(JanPrcp1965Subset$PRCP ~ 1, JanPrcp1965Subset, texasGrid, vJanPrcp1965.fit) #ordinary kriging
-spplot(JanPrcp1965krige1, sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
-
-JanPrcp1965krige2 = krige(JanPrcp1965Subset$PRCP ~ 1, JanPrcp1965Subset, texasGrid, vJanPrcp1965.fit, beta=10.0) #same with simple kriging
-spplot(JanPrcp1965krige2, sp.layout=list(texasMap, first=FALSE, lwd=2, col="white")) #looks pretty much the same
-
-JanPrcp1965krige3 = krige(JanPrcp1965Subset$PRCP ~ 1, JanPrcp1965Subset, texasGrid, vJanPrcp1965.fit, nmax=20) #ordinary kriging
-spplot(JanPrcp1965krige3, sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
+JanPrcp1965krige1 = krige(meanPrcp ~ 1, JanPrcp1965Subset, texasGrid, vJanPrcp1965.fit)
+spplot(JanPrcp1965krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
 
 
 
 
 
-                                  # AUGUST 1965 #
+
+                                        # AUGUST 1965 #
 
 # Precipitation values for Auguary 1965 in Texas
 AugPrcp1965 = read_xlsx("1965/Aug/1965-Aug-Prcp.xlsx")
@@ -585,44 +572,40 @@ AugPrcp1965$LATITUDE = as.numeric(AugPrcp1965$LATITUDE)
 AugPrcp1965$LONGITUDE = as.numeric(AugPrcp1965$LONGITUDE)
 
 #data frame with data for one day
-AugPrcp1965Subset = AugPrcp1965
-AugPrcp1965Subset$DATE = as.character(AugPrcp1965Subset$DATE)
-AugPrcp1965Subset = subset(AugPrcp1965Subset, AugPrcp1965Subset$DATE == "1965-08-01")
-AugPrcp1965Subset = na.approx(AugPrcp1965Subset)
-
-AugPrcp1965Locations = AugPrcp1965[c(2,3,4)]
-AugPrcp1965Locations = AugPrcp1965Locations[!duplicated(AugPrcp1965Locations[,c('NAME','LATITUDE','LONGITUDE')]),]
-coordinates(AugPrcp1965Locations) = AugPrcp1965Locations[c(3,2)]
-
+AugPrcp1965Subset = computePrcpAverage(AugPrcp1965)
 coordinates(AugPrcp1965Subset) = AugPrcp1965Subset[c(4,3)]
+proj4string(AugPrcp1965Subset) = CRS("+init=epsg:4326")
+AugPrcp1965Subset = spTransform(AugPrcp1965Subset, CRS("+proj=utm +zone=13 +ellps=GRS80 +datum=NAD83 +units=m +no_defs"))
 
 # variogram for the one day
-vAugPrcp1965 = variogram(AugPrcp1965Subset$PRCP ~ 1, AugPrcp1965Subset, cutoff=2)
+vAugPrcp1965 = variogram(meanPrcp ~ LATITUDE+LONGITUDE, AugPrcp1965Subset)
 plot(vAugPrcp1965)
 
-vAugPrcp1965.fit = fit.variogram(vAugPrcp1965, vgm(32, 'Sph', 1.8, 9))
+#vAugPrcp1965.fit = fit.variogram(vAugPrcp1965, vgm(42, 'Lin', 0, 32))
+vAugPrcp1965.fit = fit.variogram(vAugPrcp1965, vgm('Exp'))
 plot(vAugPrcp1965 ,vAugPrcp1965.fit)
 
 texas = map('state', 'texas', fill=TRUE)
-plot(AugPrcp1965Locations, add=TRUE, pch=20)
-texas2 = data.frame(texas$x, texas$y)
+plot(AugPrcp1965Subset, add=TRUE, pch=20, col="red")
+texas2 = data.frame(LONGITUDE = texas$x, LATITUDE = texas$y)
 texas2 = na.omit(texas2)
 coordinates(texas2) = texas2[c(1,2)]
+proj4string(texas2) = CRS("+init=epsg:4326")
+texas2 = spTransform(texas2, CRS("+proj=utm +zone=13 +ellps=GRS80 +datum=NAD83 +units=m +no_defs"))
 
-texasGrid = spsample(AugPrcp1965Subset, type="regular")
 texasGrid = spsample(texas2, type="regular")
-map('state', 'texas')
-plot(texasGrid, add = T, pch=".")
+tx = as.data.frame(coordinates(texasGrid))
+names(tx) = c("LONGITUDE", "LATITUDE")
+coordinates(tx) = tx[c(1,2)]
+texasGrid = tx
+proj4string(texasGrid) = CRS("+proj=utm +zone=13 +ellps=GRS80 +datum=NAD83 +units=m +no_defs")
+
 texasMap = map2SpatialPolygons(texas, ID=texas$names)
+proj4string(texasMap) = CRS("+init=epsg:4326")
+texasMap = spTransform(texasMap, CRS("+proj=utm +zone=13 +ellps=GRS80 +datum=NAD83 +units=m +no_defs"))
 
-AugPrcp1965krige1 = krige(AugPrcp1965Subset$PRCP ~ 1, AugPrcp1965Subset, texasGrid, vAugPrcp1965.fit) #ordinary kriging
-spplot(AugPrcp1965krige1, sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
-
-AugPrcp1965krige2 = krige(AugPrcp1965Subset$PRCP ~ 1, AugPrcp1965Subset, texasGrid, vAugPrcp1965.fit, beta=10.0) #same with simple kriging
-spplot(AugPrcp1965krige2, sp.layout=list(texasMap, first=FALSE, lwd=2, col="white")) #looks pretty much the same
-
-AugPrcp1965krige3 = krige(AugPrcp1965Subset$PRCP ~ 1, AugPrcp1965Subset, texasGrid, vAugPrcp1965.fit, nmax=20) #ordinary kriging
-spplot(AugPrcp1965krige3, sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
+AugPrcp1965krige1 = krige(meanPrcp ~ 1, AugPrcp1965Subset, texasGrid, vAugPrcp1965.fit)
+spplot(AugPrcp1965krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
 
 
 
@@ -636,51 +619,50 @@ JanPrcp1955$LATITUDE = as.numeric(JanPrcp1955$LATITUDE)
 JanPrcp1955$LONGITUDE = as.numeric(JanPrcp1955$LONGITUDE)
 
 #data frame with data for one day
-JanPrcp1955Subset = JanPrcp1955
-JanPrcp1955Subset$DATE = as.character(JanPrcp1955Subset$DATE)
-JanPrcp1955Subset = subset(JanPrcp1955Subset, JanPrcp1955Subset$DATE == "1955-01-01")
-JanPrcp1955Subset = na.approx(JanPrcp1955Subset)
-
-JanPrcp1955Locations = JanPrcp1955[c(2,3,4)]
-JanPrcp1955Locations = JanPrcp1955Locations[!duplicated(JanPrcp1955Locations[,c('NAME','LATITUDE','LONGITUDE')]),]
-coordinates(JanPrcp1955Locations) = JanPrcp1955Locations[c(3,2)]
-
+JanPrcp1955Subset = computePrcpAverage(JanPrcp1955)
 coordinates(JanPrcp1955Subset) = JanPrcp1955Subset[c(4,3)]
+proj4string(JanPrcp1955Subset) = CRS("+init=epsg:4326")
+JanPrcp1955Subset = spTransform(JanPrcp1955Subset, CRS("+proj=utm +zone=13 +ellps=GRS80 +datum=NAD83 +units=m +no_defs"))
+
+#JanPrcp1955Zero = zerodist(JanPrcp1955Subset, zero=1000)
+#JanPrcp1955Subset = JanPrcp1955Subset[-c(JanPrcp1955Zero[,1]),]
 
 # variogram for the one day
-vJanPrcp1955 = variogram(JanPrcp1955Subset$PRCP ~ 1, JanPrcp1955Subset, cutoff=2)
+vJanPrcp1955 = variogram(meanPrcp ~ LATITUDE+LONGITUDE, JanPrcp1955Subset)
 plot(vJanPrcp1955)
 
-vJanPrcp1955.fit = fit.variogram(vJanPrcp1955, vgm(32, 'Sph', 1.8, 9))
+#vJanPrcp1955.fit = fit.variogram(vJanPrcp1955, vgm(42, 'Lin', 0))
+vJanPrcp1955.fit = fit.variogram(vJanPrcp1955, vgm('Exp'))
 plot(vJanPrcp1955 ,vJanPrcp1955.fit)
 
 texas = map('state', 'texas', fill=TRUE)
-plot(JanPrcp1955Locations, add=TRUE, pch=20)
-texas2 = data.frame(texas$x, texas$y)
+plot(JanPrcp1955Subset, add=TRUE, pch=20, col="red")
+texas2 = data.frame(LONGITUDE = texas$x, LATITUDE = texas$y)
 texas2 = na.omit(texas2)
 coordinates(texas2) = texas2[c(1,2)]
+proj4string(texas2) = CRS("+init=epsg:4326")
+texas2 = spTransform(texas2, CRS("+proj=utm +zone=13 +ellps=GRS80 +datum=NAD83 +units=m +no_defs"))
 
-texasGrid = spsample(JanPrcp1955Subset, type="regular")
 texasGrid = spsample(texas2, type="regular")
-map('state', 'texas')
-plot(texasGrid, add = T, pch=".")
+tx = as.data.frame(coordinates(texasGrid))
+names(tx) = c("LONGITUDE", "LATITUDE")
+coordinates(tx) = tx[c(1,2)]
+texasGrid = tx
+proj4string(texasGrid) = CRS("+proj=utm +zone=13 +ellps=GRS80 +datum=NAD83 +units=m +no_defs")
+
 texasMap = map2SpatialPolygons(texas, ID=texas$names)
+proj4string(texasMap) = CRS("+init=epsg:4326")
+texasMap = spTransform(texasMap, CRS("+proj=utm +zone=13 +ellps=GRS80 +datum=NAD83 +units=m +no_defs"))
 
-JanPrcp1955krige1 = krige(JanPrcp1955Subset$PRCP ~ 1, JanPrcp1955Subset, texasGrid, vJanPrcp1955.fit) #ordinary kriging
-spplot(JanPrcp1955krige1, sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
-
-JanPrcp1955krige2 = krige(JanPrcp1955Subset$PRCP ~ 1, JanPrcp1955Subset, texasGrid, vJanPrcp1955.fit, beta=10.0) #same with simple kriging
-spplot(JanPrcp1955krige2, sp.layout=list(texasMap, first=FALSE, lwd=2, col="white")) #looks pretty much the same
-
-JanPrcp1955krige3 = krige(JanPrcp1955Subset$PRCP ~ 1, JanPrcp1955Subset, texasGrid, vJanPrcp1955.fit, nmax=20) #ordinary kriging
-spplot(JanPrcp1955krige3, sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
+JanPrcp1955krige1 = krige(meanPrcp ~ 1, JanPrcp1955Subset, texasGrid, vJanPrcp1955.fit)
+spplot(JanPrcp1955krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
 
 
 
 
 
 
-                                  # AUGUST 1955 #
+                                      # AUGUST 1955 #
 
 # Precipitation values for Auguary 1955 in Texas
 AugPrcp1955 = read_xlsx("1955/Aug/1955-Aug-Prcp.xlsx")
@@ -688,144 +670,37 @@ AugPrcp1955$LATITUDE = as.numeric(AugPrcp1955$LATITUDE)
 AugPrcp1955$LONGITUDE = as.numeric(AugPrcp1955$LONGITUDE)
 
 #data frame with data for one day
-AugPrcp1955Subset = AugPrcp1955
-AugPrcp1955Subset$DATE = as.character(AugPrcp1955Subset$DATE)
-AugPrcp1955Subset = subset(AugPrcp1955Subset, AugPrcp1955Subset$DATE == "1955-08-01")
-AugPrcp1955Subset = na.approx(AugPrcp1955Subset)
-
-AugPrcp1955Locations = AugPrcp1955[c(2,3,4)]
-AugPrcp1955Locations = AugPrcp1955Locations[!duplicated(AugPrcp1955Locations[,c('NAME','LATITUDE','LONGITUDE')]),]
-coordinates(AugPrcp1955Locations) = AugPrcp1955Locations[c(3,2)]
-
+AugPrcp1955Subset = computePrcpAverage(AugPrcp1955)
 coordinates(AugPrcp1955Subset) = AugPrcp1955Subset[c(4,3)]
+proj4string(AugPrcp1955Subset) = CRS("+init=epsg:4326")
+AugPrcp1955Subset = spTransform(AugPrcp1955Subset, CRS("+proj=utm +zone=13 +ellps=GRS80 +datum=NAD83 +units=m +no_defs"))
 
 # variogram for the one day
-vAugPrcp1955 = variogram(AugPrcp1955Subset$PRCP ~ 1, AugPrcp1955Subset, cutoff=2)
+vAugPrcp1955 = variogram(meanPrcp ~ LATITUDE+LONGITUDE, AugPrcp1955Subset)
 plot(vAugPrcp1955)
 
-vAugPrcp1955.fit = fit.variogram(vAugPrcp1955, vgm(32, 'Sph', 1.8, 9))
+#vAugPrcp1955.fit = fit.variogram(vAugPrcp1955, vgm(42, 'Lin', 0, 32))
+vAugPrcp1955.fit = fit.variogram(vAugPrcp1955, vgm('Exp'))
 plot(vAugPrcp1955 ,vAugPrcp1955.fit)
 
 texas = map('state', 'texas', fill=TRUE)
-plot(AugPrcp1955Locations, add=TRUE, pch=20)
-texas2 = data.frame(texas$x, texas$y)
+plot(AugPrcp1955Subset, add=TRUE, pch=20, col="red")
+texas2 = data.frame(LONGITUDE = texas$x, LATITUDE = texas$y)
 texas2 = na.omit(texas2)
 coordinates(texas2) = texas2[c(1,2)]
+proj4string(texas2) = CRS("+init=epsg:4326")
+texas2 = spTransform(texas2, CRS("+proj=utm +zone=13 +ellps=GRS80 +datum=NAD83 +units=m +no_defs"))
 
-texasGrid = spsample(AugPrcp1955Subset, type="regular")
 texasGrid = spsample(texas2, type="regular")
-map('state', 'texas')
-plot(texasGrid, add = T, pch=".")
+tx = as.data.frame(coordinates(texasGrid))
+names(tx) = c("LONGITUDE", "LATITUDE")
+coordinates(tx) = tx[c(1,2)]
+texasGrid = tx
+proj4string(texasGrid) = CRS("+proj=utm +zone=13 +ellps=GRS80 +datum=NAD83 +units=m +no_defs")
+
 texasMap = map2SpatialPolygons(texas, ID=texas$names)
+proj4string(texasMap) = CRS("+init=epsg:4326")
+texasMap = spTransform(texasMap, CRS("+proj=utm +zone=13 +ellps=GRS80 +datum=NAD83 +units=m +no_defs"))
 
-AugPrcp1955krige1 = krige(AugPrcp1955Subset$PRCP ~ 1, AugPrcp1955Subset, texasGrid, vAugPrcp1955.fit) #ordinary kriging
-spplot(AugPrcp1955krige1, sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
-
-AugPrcp1955krige2 = krige(AugPrcp1955Subset$PRCP ~ 1, AugPrcp1955Subset, texasGrid, vAugPrcp1955.fit, beta=10.0) #same with simple kriging
-spplot(AugPrcp1955krige2, sp.layout=list(texasMap, first=FALSE, lwd=2, col="white")) #looks pretty much the same
-
-AugPrcp1955krige3 = krige(AugPrcp1955Subset$PRCP ~ 1, AugPrcp1955Subset, texasGrid, vAugPrcp1955.fit, nmax=20) #ordinary kriging
-spplot(AugPrcp1955krige3, sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
-
-
-
-
-
-                                  # JANUARY 1945 #
-
-# Precipitation values for January 1945 in Texas
-JanPrcp1945 = read_xlsx("1945/Jan/1945-Jan-Prcp.xlsx")
-JanPrcp1945$LATITUDE = as.numeric(JanPrcp1945$LATITUDE)
-JanPrcp1945$LONGITUDE = as.numeric(JanPrcp1945$LONGITUDE)
-
-#data frame with data for one day
-JanPrcp1945Subset = JanPrcp1945
-JanPrcp1945Subset$DATE = as.character(JanPrcp1945Subset$DATE)
-JanPrcp1945Subset = subset(JanPrcp1945Subset, JanPrcp1945Subset$DATE == "1945-01-01")
-JanPrcp1945Subset = na.approx(JanPrcp1945Subset)
-
-JanPrcp1945Locations = JanPrcp1945[c(2,3,4)]
-JanPrcp1945Locations = JanPrcp1945Locations[!duplicated(JanPrcp1945Locations[,c('NAME','LATITUDE','LONGITUDE')]),]
-coordinates(JanPrcp1945Locations) = JanPrcp1945Locations[c(3,2)]
-
-coordinates(JanPrcp1945Subset) = JanPrcp1945Subset[c(4,3)]
-
-# variogram for the one day
-vJanPrcp1945 = variogram(JanPrcp1945Subset$PRCP ~ 1, JanPrcp1945Subset, cutoff=2)
-plot(vJanPrcp1945)
-
-vJanPrcp1945.fit = fit.variogram(vJanPrcp1945, vgm(32, 'Sph', 1.8, 9))
-plot(vJanPrcp1945 ,vJanPrcp1945.fit)
-
-texas = map('state', 'texas', fill=TRUE)
-plot(JanPrcp1945Locations, add=TRUE, pch=20)
-texas2 = data.frame(texas$x, texas$y)
-texas2 = na.omit(texas2)
-coordinates(texas2) = texas2[c(1,2)]
-
-texasGrid = spsample(JanPrcp1945Subset, type="regular")
-texasGrid = spsample(texas2, type="regular")
-map('state', 'texas')
-plot(texasGrid, add = T, pch=".")
-texasMap = map2SpatialPolygons(texas, ID=texas$names)
-
-JanPrcp1945krige1 = krige(JanPrcp1945Subset$PRCP ~ 1, JanPrcp1945Subset, texasGrid, vJanPrcp1945.fit) #ordinary kriging
-spplot(JanPrcp1945krige1, sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
-
-JanPrcp1945krige2 = krige(JanPrcp1945Subset$PRCP ~ 1, JanPrcp1945Subset, texasGrid, vJanPrcp1945.fit, beta=10.0) #same with simple kriging
-spplot(JanPrcp1945krige2, sp.layout=list(texasMap, first=FALSE, lwd=2, col="white")) #looks pretty much the same
-
-JanPrcp1945krige3 = krige(JanPrcp1945Subset$PRCP ~ 1, JanPrcp1945Subset, texasGrid, vJanPrcp1945.fit, nmax=20) #ordinary kriging
-spplot(JanPrcp1945krige3, sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
-
-
-
-
-
-
-                                      # AUGUST 1945 #
-
-# Precipitation values for Auguary 1945 in Texas
-AugPrcp1945 = read_xlsx("1945/Aug/1945-Aug-Prcp.xlsx")
-AugPrcp1945$LATITUDE = as.numeric(AugPrcp1945$LATITUDE)
-AugPrcp1945$LONGITUDE = as.numeric(AugPrcp1945$LONGITUDE)
-
-#data frame with data for one day
-AugPrcp1945Subset = AugPrcp1945
-AugPrcp1945Subset$DATE = as.character(AugPrcp1945Subset$DATE)
-AugPrcp1945Subset = subset(AugPrcp1945Subset, AugPrcp1945Subset$DATE == "1945-08-01")
-AugPrcp1945Subset = na.approx(AugPrcp1945Subset)
-
-AugPrcp1945Locations = AugPrcp1945[c(2,3,4)]
-AugPrcp1945Locations = AugPrcp1945Locations[!duplicated(AugPrcp1945Locations[,c('NAME','LATITUDE','LONGITUDE')]),]
-coordinates(AugPrcp1945Locations) = AugPrcp1945Locations[c(3,2)]
-
-coordinates(AugPrcp1945Subset) = AugPrcp1945Subset[c(4,3)]
-
-# variogram for the one day
-vAugPrcp1945 = variogram(AugPrcp1945Subset$PRCP ~ 1, AugPrcp1945Subset, cutoff=2)
-plot(vAugPrcp1945)
-
-vAugPrcp1945.fit = fit.variogram(vAugPrcp1945, vgm(32, 'Exp', 1.8, 9))
-plot(vAugPrcp1945 ,vAugPrcp1945.fit)
-
-texas = map('state', 'texas', fill=TRUE)
-plot(AugPrcp1945Locations, add=TRUE, pch=20)
-texas2 = data.frame(texas$x, texas$y)
-texas2 = na.omit(texas2)
-coordinates(texas2) = texas2[c(1,2)]
-
-texasGrid = spsample(AugPrcp1945Subset, type="regular")
-texasGrid = spsample(texas2, type="regular")
-map('state', 'texas')
-plot(texasGrid, add = T, pch=".")
-texasMap = map2SpatialPolygons(texas, ID=texas$names)
-
-AugPrcp1945krige1 = krige(AugPrcp1945Subset$PRCP ~ 1, AugPrcp1945Subset, texasGrid, vAugPrcp1945.fit) #ordinary kriging
-spplot(AugPrcp1945krige1, sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
-
-AugPrcp1945krige2 = krige(AugPrcp1945Subset$PRCP ~ 1, AugPrcp1945Subset, texasGrid, vAugPrcp1945.fit, beta=10.0) #same with simple kriging
-spplot(AugPrcp1945krige2, sp.layout=list(texasMap, first=FALSE, lwd=2, col="white")) #looks pretty much the same
-
-AugPrcp1945krige3 = krige(AugPrcp1945Subset$PRCP ~ 1, AugPrcp1945Subset, texasGrid, vAugPrcp1945.fit, nmax=20) #ordinary kriging
-spplot(AugPrcp1945krige3, sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
+AugPrcp1955krige1 = krige(meanPrcp ~ 1, AugPrcp1955Subset, texasGrid, vAugPrcp1955.fit)
+spplot(AugPrcp1955krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
