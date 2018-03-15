@@ -11,7 +11,7 @@ We know about the climate change and its consequences since many years and a lot
 
 ## About the files in this repository:
 
-In the data file you will find two types of data sets:
+In the data directory you will find two types of data sets:
 * The directories with the years contain data from the different stations from the months January and August
 * The time series directory contains daily measurements from 4 different stations spread across the state
 
