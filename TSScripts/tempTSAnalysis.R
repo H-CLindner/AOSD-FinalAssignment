@@ -18,7 +18,8 @@ createTempIndexTemp = function(rawData){
 fillMissingDatesTemp = function(dates, dataFrame){
   dateRange = seq(min(dates), max(dates), by = 1)
   allDates = data.frame(dateRange)
-  allDates = rename(allDates, replace = c("dateRange" = "DATE"))
+  #allDates = rename(allDates, replace = c("dateRange" = "DATE"))
+  colnames(allDates) = c("dateRange" = "DATE")
   dataFrame = merge(dataFrame, allDates, all=TRUE)
   dataFrame = dataFrame[!duplicated(dataFrame$DATE),]
   return(dataFrame)

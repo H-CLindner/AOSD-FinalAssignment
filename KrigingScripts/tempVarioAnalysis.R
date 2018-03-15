@@ -35,6 +35,19 @@ readDataTemp = function(path){
   return(rawData)
 }
 
+statisticsCompute = function(dataSet){
+  mean = mean(dataSet)
+  sd = sd(dataSet)
+  min = min(dataSet)
+  max = max(dataSet)
+  var = var(dataSet)
+  median = median(dataSet)
+  firstQuartile = quantile(dataSet, 0.25)
+  thirdQuartile = quantile(dataSet, 0.75)
+  statistics = data.frame(mean, sd, min, max, var, median, firstQuartile, thirdQuartile)
+  return(statistics)
+}
+
 texas = map('state', 'texas', fill=TRUE)
 texas2 = data.frame(LONGITUDE = texas$x, LATITUDE = texas$y)
 texas2 = na.omit(texas2)

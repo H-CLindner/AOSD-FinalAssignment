@@ -1,50 +1,3017 @@
 ---
-title: "Manifestation of the climate change in Texas over the past 70 years"
+title: "Manifestation of the climate change in Texas from 1950 until today"
 author: "Hans-Christian Lindner"
 institute: "Institute for Geoinformatics"
 city: "Münster, Germany"
 e-mail: "h_lind04@uni-muenster.de"
 date: "17th of March 2018"
-output: pdf_document
+output: html_document
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+```{r, echo=FALSE, warning=FALSE}
+#Loading in all important libraries
+library("readxl")
+library("maps")
+library("maptools")
+library("mapdata")
+library("xts")
+library("plyr")
+library("forecast")
+setwd("data")
+setwd("C:/Users/hans-/Documents/Master/1.Semester/ASTD/FinalAssignment/data")
+```
+
+```{r, echo=FALSE}
+#functions for the temperature timeseries
+createTempIndexTemp = function(rawData){
+  rawDataIndex = rawData$DATE
+  rawDataIndex.date = as.Date(rawDataIndex)
+  return(rawDataIndex.date)
+}
+
+fillMissingDatesTemp = function(dates, dataFrame){
+  dateRange = seq(min(dates), max(dates), by = 1)
+  allDates = data.frame(dateRange)
+  colnames(allDates) = c("dateRange" = "DATE")
+  dataFrame = merge(dataFrame, allDates, all=TRUE)
+  dataFrame = dataFrame[!duplicated(dataFrame$DATE),]
+  return(dataFrame)
+}
+
+deleteNAsTemp = function(frame){
+  if(sum(is.na(frame)) > 0){
+    frame = na.approx(frame)
+  } else {
+    print("no NA's")
+  }
+}
+
+tsTrendTemp = function(start, dataFrame){
+  tempTS = ts(dataFrame$TMAX, start=start, frequency=365.25)
+  tempTS = na.approx(tempTS)
+  stlTempTS = stl(tempTS, s.window = "periodic")
+  trendTempTS = stlTempTS$time.series[,2]
+  return(trendTempTS)
+}
+
+forecastTemp = function(xtsTemp){
+  arimaTemp = auto.arima(xtsTemp)
+  fcastTemp = forecast(arimaTemp, h=100)
+  return(fcastTemp)
+}
+
+statisticsTemp = function(xtsTemp){
+  mean = mean(xtsTemp)
+  sd = sd(xtsTemp)
+  min = min(xtsTemp)
+  max = max(xtsTemp)
+  var = var(xtsTemp)
+  median = median(xtsTemp)
+  firstQuartile = quantile(xtsTemp, 0.25)
+  thirdQuartile = quantile(xtsTemp, 0.75)
+  statistics = data.frame(mean, sd, min, max, var, median, firstQuartile, thirdQuartile)
+  return(statistics)
+}
+```
+
+```{r, echo=FALSE, fig.show="hide"}
+#analysis of the temperature timeseries
+# Angleton, Texas in the South East near Houston
+# Temperature timeseries for Angleton in the SouthEast of Texas
+angletonTemp = read_xlsx("timeseries/Angleton, SE/Angleton, TMax.xlsx")
+angletonTempIndex = createTempIndexTemp(angletonTemp)
+
+#fill missing dates
+angletonTemp = fillMissingDatesTemp(angletonTempIndex, angletonTemp)
+
+#create xts object
+angletonTempIndex = createTempIndexTemp(angletonTemp)
+tmpMaxAngleton = xts(angletonTemp$TMAX, angletonTempIndex)
+
+#delete NA's
+tmpMaxAngleton = deleteNAsTemp(tmpMaxAngleton)
+
+#plot
+plot(tmpMaxAngleton)
+
+#plot acf and pacf of the timeseries
+acfAngletonTemp = acf(tmpMaxAngleton, lag.max = 365)
+pacfAngletonTemp = pacf(tmpMaxAngleton)
+
+#create trend
+start = as.Date("1950-01-01") 
+trendTmpAngleton = tsTrendTemp(start, angletonTemp)
+
+#forecast
+fcastTempAngleton = forecastTemp(tmpMaxAngleton)
+
+#create statistics
+statisticsAngletonTemp = statisticsTemp(tmpMaxAngleton)
+
+
+# Benbrook Dam, Texas in the North East near Dallas
+# Temperature timeseries for Benbrook in the NorthEast of Texas
+BenbrookTemp = read_xlsx("timeseries/Benbrook, NE/Benbrook, TMax.xlsx")
+BenbrookTempIndex = createTempIndexTemp(BenbrookTemp)
+
+
+#fill missing dates
+BenbrookTemp = fillMissingDatesTemp(BenbrookTempIndex, BenbrookTemp)
+
+#create xts object
+BenbrookTempIndex = createTempIndexTemp(BenbrookTemp)
+tmpMaxBenbrook = xts(BenbrookTemp$TMAX, BenbrookTempIndex)
+
+#delete NA's
+tmpMaxBenbrook = deleteNAsTemp(tmpMaxBenbrook)
+
+#plot
+plot(tmpMaxBenbrook)
+
+#plot acf and pacf of the timeseries
+acfBenbrookTemp = acf(tmpMaxBenbrook, lag.max = 365)
+pacfBenbrookTemp = pacf(tmpMaxBenbrook)
+
+#create trend
+start = as.Date("1950-07-03") 
+trendTmpBenbrook = tsTrendTemp(start, BenbrookTemp)
+
+#forecast
+fcastTempBenbrook = forecastTemp(tmpMaxBenbrook)
+
+#create statistics
+statisticsBenbrookTemp = statisticsTemp(tmpMaxBenbrook)
+
+# Fort Stockton, Texas in the North West near the border to New Mexico
+# Temperature timeseries for Fort Stockton in the NorthWest of Texas
+fortStocktonTemp = read_xlsx("timeseries/FortStockton, NW/FortStockton, TMax.xlsx")
+fortStocktonTempIndex = createTempIndexTemp(fortStocktonTemp)
+
+
+#fill missing dates
+fortStocktonTemp = fillMissingDatesTemp(fortStocktonTempIndex, fortStocktonTemp)
+
+#create xts object
+fortStocktonTempIndex = createTempIndexTemp(fortStocktonTemp)
+tmpMaxfortStockton = xts(fortStocktonTemp$TMAX, fortStocktonTempIndex)
+
+#delete NA's
+tmpMaxfortStockton = deleteNAsTemp(tmpMaxfortStockton)
+
+#plot
+plot(tmpMaxfortStockton)
+
+#plot acf and pacf of the timeseries
+acffortStocktonTemp = acf(tmpMaxfortStockton, lag.max = 365)
+pacffortStocktonTemp = pacf(tmpMaxfortStockton)
+
+#create trend
+start = as.Date("1950-01-01") 
+trendTmpfortStockton = tsTrendTemp(start, fortStocktonTemp)
+
+#forecast
+fcastTempfortStockton = forecastTemp(tmpMaxfortStockton)
+
+#create statistics
+statisticsfortStocktonTemp = statisticsTemp(tmpMaxfortStockton)
+
+# Mccook, Texas in the South West near the coast of the Golf of Mexico and the Mexican border
+# Temperature timeseries for Mccook in the South West of Texas
+MccookTemp = read_xlsx("timeseries/Mccook, SW/Mccook, TMax.xlsx")
+MccookTempIndex = createTempIndexTemp(MccookTemp)
+
+
+#fill missing dates
+MccookTemp = fillMissingDatesTemp(MccookTempIndex, MccookTemp)
+
+#create xts object
+MccookTempIndex = createTempIndexTemp(MccookTemp)
+tmpMaxMccook = xts(MccookTemp$TMAX, MccookTempIndex)
+
+#delete NA's
+tmpMaxMccook = deleteNAsTemp(tmpMaxMccook)
+
+#plot
+plot(tmpMaxMccook)
+
+#plot acf and pacf of the timeseries
+acfMccookTemp = acf(tmpMaxMccook, lag.max = 365)
+pacfMccookTemp = pacf(tmpMaxMccook)
+
+#create trend
+start = as.Date("1950-01-01") 
+trendTmpMccook = tsTrendTemp(start, MccookTemp)
+
+#forecast
+fcastTempMccook = forecastTemp(tmpMaxMccook)
+
+#create statistics
+statisticsMccookTemp = statisticsTemp(tmpMaxMccook)
+
+#boxplot of temperature timeseries
+combineTmpTS = merge(tmpMaxAngleton, tmpMaxBenbrook, tmpMaxfortStockton, tmpMaxMccook)
+combineTmpTS = rename(combineTmpTS, replace=c("tmpMaxAngleton" = "Angleton", "tmpMaxBenbrook" = "Benbrook", "tmpMaxfortStockton" = "Fort Stockton", "tmpMaxMccook" = "Mccook"))
+boxplot(coredata(combineTmpTS))
+
+#linear models of the time series
+linTrendAngletonTemp = lm(trendTmpAngleton~time(trendTmpAngleton))
+linTrendBenbrookTemp = lm(trendTmpBenbrook~time(trendTmpBenbrook))
+linTrendfortStocktonTemp = lm(trendTmpfortStockton~time(trendTmpfortStockton))
+linTrendMccookTemp = lm(trendTmpMccook~time(trendTmpMccook))
+
+#plot trend of time series and compare linear regression with slope
+par(mfrow=c(1,1))
+plot(trendTmpAngleton)
+abline(linTrendAngletonTemp, col="red")
+slopeAngletonTemp = linTrendAngletonTemp$coefficients[2]
+plot(trendTmpBenbrook)
+abline(linTrendBenbrookTemp, col="red")
+slopeBenbrookTemp = linTrendBenbrookTemp$coefficients[2]
+plot(trendTmpfortStockton)
+abline(linTrendfortStocktonTemp, col="red")
+slopefortStocktonTemp = linTrendfortStocktonTemp$coefficients[2]
+plot(trendTmpMccook)
+abline(linTrendMccookTemp, col="red")
+slopeMccookTemp = linTrendMccookTemp$coefficients[2]
+slopeTemp = data.frame(slopeAngletonTemp, slopeBenbrookTemp, slopefortStocktonTemp, slopeMccookTemp)
+```
+
+```{r, echo=FALSE}
+#functions for the precipitation timeseries
+createPrcpIndexPrcp = function(rawData){
+  rawDataIndex = rawData$DATE
+  rawDataIndex.date = as.Date(rawDataIndex)
+  return(rawDataIndex.date)
+}
+
+fillMissingDatesPrcp = function(dates, dataFrame){
+  dateRange = seq(min(dates), max(dates), by = 1)
+  allDates = data.frame(dateRange)
+  colnames(allDates) = c("dateRange" = "DATE")
+  dataFrame = merge(dataFrame, allDates, all=TRUE)
+  dataFrame = dataFrame[!duplicated(dataFrame$DATE),]
+  return(dataFrame)
+}
+
+deleteNAsPrcp = function(frame){
+  if(sum(is.na(frame)) > 0){
+    frame = na.approx(frame)
+  } else {
+    print("no NA's")
+  }
+}
+
+tsTrendPrcp = function(start, dataFrame){
+  PrcpTS = ts(dataFrame$PRCP, start=start, frequency=365.25)
+  PrcpTS = na.approx(PrcpTS)
+  stlPrcpTS = stl(PrcpTS, s.window = "periodic")
+  trendPrcpTS = stlPrcpTS$time.series[,2]
+  return(trendPrcpTS)
+}
+
+forecastPrcp = function(xtsPrcp){
+  arimaPrcp = auto.arima(xtsPrcp)
+  fcastPrcp = forecast(arimaPrcp, h=100)
+  return(fcastPrcp)
+}
+
+statisticsPrcp = function(xtsPrcp){
+  mean = mean(xtsPrcp)
+  sd = sd(xtsPrcp)
+  min = min(xtsPrcp)
+  max = max(xtsPrcp)
+  var = var(xtsPrcp)
+  median = median(xtsPrcp)
+  firstQuartile = quantile(xtsPrcp, 0.25)
+  thirdQuartile = quantile(xtsPrcp, 0.75)
+  statistics = data.frame(mean, sd, min, max, var, median, firstQuartile, thirdQuartile)
+  return(statistics)
+}
+```
+
+```{r, echo=FALSE, fig.show="hide"}
+#analysis of the precipitation timeseries
+# Angleton, Texas in the South East near Houston
+# Precipitation timeseries for Angleton in the SouthEast of Texas
+angletonPrcp = read_xlsx("timeseries/Angleton, SE/Angleton, Prcp.xlsx")
+angletonPrcpIndex = createPrcpIndexPrcp(angletonPrcp)
+
+#fill missing dates
+angletonPrcp = fillMissingDatesPrcp(angletonPrcpIndex, angletonPrcp)
+
+#create an xts object
+angletonPrcpIndex = createPrcpIndexPrcp(angletonPrcp)
+PrcpAngleton = xts(angletonPrcp$PRCP, angletonPrcpIndex)
+
+#delete NA's
+PrcpAngleton = deleteNAsPrcp(PrcpAngleton)
+
+#plot
+plot(PrcpAngleton)
+
+#plot acf and pacf of the timeseries
+acfAngletonPrcp = acf(PrcpAngleton, lag.max = 365)
+pacfAngletonPrcp = pacf(PrcpAngleton)
+
+#create trend
+start = as.Date("1950-01-01")  
+trendPrcpAngleton = tsTrendPrcp(start, angletonPrcp)
+
+#forecast
+fcastPrcpAngleton = forecastPrcp(PrcpAngleton)
+
+#statistics
+statisticsAngletonPrcp = statisticsPrcp(PrcpAngleton)
+
+
+# Benbrook Dam, Texas in the North East near Dallas
+# Precipitation timeseries for Benbrook in the NorthEast of Texas
+BenbrookPrcp = read_xlsx("timeseries/Benbrook, NE/Benbrook, Prcp.xlsx")
+BenbrookPrcpIndex = createPrcpIndexPrcp(BenbrookPrcp)
+
+#fill missing dates
+BenbrookPrcp = fillMissingDatesPrcp(BenbrookPrcpIndex, BenbrookPrcp)
+
+#create an xts object
+BenbrookPrcpIndex = createPrcpIndexPrcp(BenbrookPrcp)
+PrcpBenbrook = xts(BenbrookPrcp$PRCP, BenbrookPrcpIndex)
+
+#delete NA's
+PrcpBenbrook = deleteNAsPrcp(PrcpBenbrook)
+
+#plot
+plot(PrcpBenbrook)
+
+#plot acf and pacf of the timeseries
+acfBenbrookPrcp = acf(PrcpBenbrook, lag.max = 365)
+pacfBenbrookPrcp = pacf(PrcpBenbrook)
+
+#create trend
+start = as.Date("1950-01-01")  
+trendPrcpBenbrook = tsTrendPrcp(start, BenbrookPrcp)
+
+#forecast
+fcastPrcpBenbrook = forecastPrcp(PrcpBenbrook)
+
+#statistics
+statisticsBenbrookPrcp = statisticsPrcp(PrcpBenbrook)
+
+
+
+# Fort Stockton, Texas in the North West near the border to New Mexico
+# Precipitation timeseries for Fort Stockton in the NorthWest of Texas
+fortStocktonPrcp = read_xlsx("timeseries/fortStockton, NW/fortStockton, Prcp.xlsx")
+fortStocktonPrcpIndex = createPrcpIndexPrcp(fortStocktonPrcp)
+
+#fill missing dates
+fortStocktonPrcp = fillMissingDatesPrcp(fortStocktonPrcpIndex, fortStocktonPrcp)
+
+#create an xts object
+fortStocktonPrcpIndex = createPrcpIndexPrcp(fortStocktonPrcp)
+PrcpfortStockton = xts(fortStocktonPrcp$PRCP, fortStocktonPrcpIndex)
+
+#delete NA's
+PrcpfortStockton = deleteNAsPrcp(PrcpfortStockton)
+
+#plot
+plot(PrcpfortStockton)
+
+#plot acf and pacf of the timeseries
+acffortStocktonPrcp = acf(PrcpfortStockton, lag.max = 365)
+pacffortStocktonPrcp = pacf(PrcpfortStockton)
+
+#create trend
+start = as.Date("1950-01-01")  
+trendPrcpfortStockton = tsTrendPrcp(start, fortStocktonPrcp)
+
+#forecast
+fcastPrcpfortStockton = forecastPrcp(PrcpfortStockton)
+
+#statistics
+statisticsfortStocktonPrcp = statisticsPrcp(PrcpfortStockton)
+
+
+
+# Mccook, Texas in the South West near the coast of the Golf of Mexico and the Mexican border
+# Precipitation timeseries for Mccook in the South West of Texas
+MccookPrcp = read_xlsx("timeseries/Mccook, SW/Mccook, Prcp.xlsx")
+MccookPrcpIndex = createPrcpIndexPrcp(MccookPrcp)
+
+#fill missing dates
+MccookPrcp = fillMissingDatesPrcp(MccookPrcpIndex, MccookPrcp)
+
+#create an xts object
+MccookPrcpIndex = createPrcpIndexPrcp(MccookPrcp)
+PrcpMccook = xts(MccookPrcp$PRCP, MccookPrcpIndex)
+
+#delete NA's
+PrcpMccook = deleteNAsPrcp(PrcpMccook)
+
+#plot
+plot(PrcpMccook)
+
+#plot acf and pacf of the timeseries
+acfMccookPrcp = acf(PrcpMccook, lag.max = 365)
+pacfMccookPrcp = pacf(PrcpMccook)
+
+#create trend
+start = as.Date("1950-01-01")  
+trendPrcpMccook = tsTrendPrcp(start, MccookPrcp)
+
+#forecast
+fcastPrcpMccook = forecastPrcp(PrcpMccook)
+
+#statistics
+statisticsMccookPrcp = statisticsPrcp(PrcpMccook)
+
+
+#boxplot of precipitation timeseries
+combinePrcpTS = merge(PrcpAngleton, PrcpBenbrook, PrcpfortStockton, PrcpMccook)
+combinePrcpTS = rename(combinePrcpTS, replace=c("PrcpAngleton" = "Angleton", "PrcpBenbrook" = "Benbrook", "PrcpfortStockton" = "Fort Stockton", "PrcpMccook" = "Mccook"))
+boxplot(coredata(combinePrcpTS))
+
+#linear models of the time series
+linTrendAngletonPrcp = lm(trendPrcpAngleton~time(trendPrcpAngleton))
+linTrendBenbrookPrcp = lm(trendPrcpBenbrook~time(trendPrcpBenbrook))
+linTrendfortStocktonPrcp = lm(trendPrcpfortStockton~time(trendPrcpfortStockton))
+linTrendMccookPrcp = lm(trendPrcpMccook~time(trendPrcpMccook))
+
+#plot trend of time series and compare linear regression with slope
+par(mfrow=c(1,1))
+plot(trendPrcpAngleton)
+abline(linTrendAngletonPrcp, col="red")
+slopeAngletonPrcp = linTrendAngletonPrcp$coefficients[2]
+plot(trendPrcpBenbrook)
+abline(linTrendBenbrookPrcp, col="red")
+slopeBenbrookPrcp = linTrendBenbrookPrcp$coefficients[2]
+plot(trendPrcpfortStockton)
+abline(linTrendfortStocktonPrcp, col="red")
+slopefortStocktonPrcp = linTrendfortStocktonPrcp$coefficients[2]
+plot(trendPrcpMccook)
+abline(linTrendMccookPrcp, col="red")
+slopeMccookPrcp = linTrendMccookPrcp$coefficients[2]
+slopePrcp = data.frame(slopeAngletonPrcp, slopeBenbrookPrcp, slopefortStocktonPrcp, slopeMccookPrcp)
+```
+
+```{r, echo=FALSE}
+#functions for the evaporation timeseries
+createEvapIndexEvap = function(rawData){
+  rawDataIndex = rawData$DATE
+  rawDataIndex.date = as.Date(rawDataIndex)
+  return(rawDataIndex.date)
+}
+
+fillMissingDatesEvap = function(dates, dataFrame){
+  dateRange = seq(min(dates), max(dates), by = 1)
+  allDates = data.frame(dateRange)
+  colnames(allDates) = c("dateRange" = "DATE")
+  dataFrame = merge(dataFrame, allDates, all=TRUE)
+  dataFrame = dataFrame[!duplicated(dataFrame$DATE),]
+  return(dataFrame)
+}
+
+deleteNAsEvap = function(frame){
+  if(sum(is.na(frame)) > 0){
+    frame = na.approx(frame)
+  } else {
+    print("no NA's")
+  }
+}
+
+tsTrendEvap = function(start, dataFrame){
+  EvapTS = ts(dataFrame$EVAP, start=start, frequency=365.25)
+  EvapTS = na.approx(EvapTS)
+  stlEvapTS = stl(EvapTS, s.window = "periodic")
+  trendEvapTS = stlEvapTS$time.series[,2]
+  return(trendEvapTS)
+}
+
+forecastEvap = function(xtsEvap){
+  arimaEvap = auto.arima(xtsEvap)
+  fcastEvap = forecast(arimaEvap, h=100)
+  return(fcastEvap)
+}
+
+statisticsEvap = function(xtsEvap){
+  mean = mean(xtsEvap)
+  sd = sd(xtsEvap)
+  min = min(xtsEvap)
+  max = max(xtsEvap)
+  var = var(xtsEvap)
+  median = median(xtsEvap)
+  firstQuartile = quantile(xtsEvap, 0.25)
+  thirdQuartile = quantile(xtsEvap, 0.75)
+  statistics = data.frame(mean, sd, min, max, var, median, firstQuartile, thirdQuartile)
+  return(statistics)
+}
+```
+
+```{r, echo=FALSE, fig.show="hide"}
+#analysis of the evaporation timeseries
+# Angleton, Texas in the South East near Houston
+# Evaporation timeseries for Angleton in the SouthEast of Texas
+angletonEvap = read_xlsx("timeseries/Angleton, SE/Angleton, Evap.xlsx")
+angletonEvapIndex = createEvapIndexEvap(angletonEvap)
+
+#fill missing dates
+angletonEvap = fillMissingDatesEvap(angletonEvapIndex, angletonEvap)
+
+#create an xts object
+angletonEvapIndex = createEvapIndexEvap(angletonEvap)
+EvapAngleton = xts(angletonEvap$EVAP, angletonEvapIndex)
+
+#delete NA's
+EvapAngleton = deleteNAsEvap(EvapAngleton)
+
+#plot
+plot(EvapAngleton)
+
+#plot acf and pacf of the timeseries
+acfAngletonEvap = acf(EvapAngleton, lag.max = 365)
+pacfAngletonEvap = pacf(EvapAngleton)
+
+#create trend
+start = as.Date("1953-01-01")
+trendEvapAngleton = tsTrendEvap(start, angletonEvap)
+
+#forecast
+fcastEvapAngleton = forecastEvap(EvapAngleton)
+
+#statistics
+statisticsAngletonEvap = statisticsEvap(EvapAngleton)
+
+
+# Benbrook Dam, Texas in the North East near Dallas
+# Evaporation timeseries for Benbrook in the NorthEast of Texas
+BenbrookEvap = read_xlsx("timeseries/Benbrook, NE/Benbrook, Evap.xlsx")
+BenbrookEvapIndex = createEvapIndexEvap(BenbrookEvap)
+
+#fill missing dates
+BenbrookEvap = fillMissingDatesEvap(BenbrookEvapIndex, BenbrookEvap)
+
+#create an xts object
+BenbrookEvapIndex = createEvapIndexEvap(BenbrookEvap)
+EvapBenbrook = xts(BenbrookEvap$EVAP, BenbrookEvapIndex)
+
+#delete NA's
+EvapBenbrook = deleteNAsEvap(EvapBenbrook)
+
+#plot
+plot(EvapBenbrook)
+
+#plot acf and pacf of the timeseries
+acfBenbrookEvap = acf(EvapBenbrook, lag.max = 365)
+pacfBenbrookEvap = pacf(EvapBenbrook)
+
+#create trend
+start = as.Date("1953-01-01")
+trendEvapBenbrook = tsTrendEvap(start, BenbrookEvap)
+
+#forecast
+fcastEvapBenbrook = forecastEvap(EvapBenbrook)
+
+#statistics
+statisticsBenbrookEvap = statisticsEvap(EvapBenbrook)
+
+
+
+# Fort Stockton, Texas in the North West near the border to New Mexico
+# Evaporation timeseries for Fort Stockton in the NorthWest of Texas
+fortStocktonEvap = read_xlsx("timeseries/fortStockton, NW/fortStockton, Evap.xlsx")
+fortStocktonEvapIndex = createEvapIndexEvap(fortStocktonEvap)
+
+#fill missing dates
+fortStocktonEvap = fillMissingDatesEvap(fortStocktonEvapIndex, fortStocktonEvap)
+
+#create an xts object
+fortStocktonEvapIndex = createEvapIndexEvap(fortStocktonEvap)
+EvapfortStockton = xts(fortStocktonEvap$EVAP, fortStocktonEvapIndex)
+
+#delete NA's
+EvapfortStockton = deleteNAsEvap(EvapfortStockton)
+
+#plot
+plot(EvapfortStockton)
+
+#plot acf and pacf of the timeseries
+acffortStocktonEvap = acf(EvapfortStockton, lag.max = 365)
+pacffortStocktonEvap = pacf(EvapfortStockton)
+
+#create trend
+start = as.Date("1953-01-01")
+trendEvapfortStockton = tsTrendEvap(start, fortStocktonEvap)
+
+#forecast
+fcastEvapfortStockton = forecastEvap(EvapfortStockton)
+
+#statistics
+statisticsfortStocktonEvap = statisticsEvap(EvapfortStockton)
+
+
+
+# Mccook, Texas in the South West near the coast of the Golf of Mexico and the Mexican border
+# Evaporation timeseries for Mccook in the South West of Texas
+MccookEvap = read_xlsx("timeseries/Mccook, SW/Mccook, Evap.xlsx")
+MccookEvapIndex = createEvapIndexEvap(MccookEvap)
+
+#fill missing dates
+MccookEvap = fillMissingDatesEvap(MccookEvapIndex, MccookEvap)
+
+#create an xts object
+MccookEvapIndex = createEvapIndexEvap(MccookEvap)
+EvapMccook = xts(MccookEvap$EVAP, MccookEvapIndex)
+
+#delete NA's
+EvapMccook = deleteNAsEvap(EvapMccook)
+
+#plot
+plot(EvapMccook)
+
+#plot acf and pacf of the timeseries
+acfMccookEvap = acf(EvapMccook, lag.max = 365)
+pacfMccookEvap = pacf(EvapMccook)
+
+#create trend
+start = as.Date("1953-01-01")
+trendEvapMccook = tsTrendEvap(start, MccookEvap)
+
+#forecast
+fcastEvapMccook = forecastEvap(EvapMccook)
+
+#statistics
+statisticsMccookEvap = statisticsEvap(EvapMccook)
+
+
+#boxplot of evaporation timeseries
+combineEvapTS = merge(EvapAngleton, EvapBenbrook, EvapfortStockton, EvapMccook)
+combineEvapTS = rename(combineEvapTS, replace=c("EvapAngleton" = "Angleton", "EvapBenbrook" = "Benbrook", "EvapfortStockton" = "Fort Stockton", "EvapMccook" = "Mccook"))
+boxplot(coredata(combineEvapTS))
+
+#linear models of the time series
+linTrendAngletonEvap = lm(trendEvapAngleton~time(trendEvapAngleton))
+linTrendBenbrookEvap = lm(trendEvapBenbrook~time(trendEvapBenbrook))
+linTrendfortStocktonEvap = lm(trendEvapfortStockton~time(trendEvapfortStockton))
+linTrendMccookEvap = lm(trendEvapMccook~time(trendEvapMccook))
+
+#plot trend of time series and compare linear regression with slope
+par(mfrow=c(1,1))
+plot(trendEvapAngleton)
+abline(linTrendAngletonEvap, col="red")
+slopeAngletonEvap = linTrendAngletonEvap$coefficients[2]
+plot(trendEvapBenbrook)
+abline(linTrendBenbrookEvap, col="red")
+slopeBenbrookEvap = linTrendBenbrookEvap$coefficients[2]
+plot(trendEvapfortStockton)
+abline(linTrendfortStocktonEvap, col="red")
+slopefortStocktonEvap = linTrendfortStocktonEvap$coefficients[2]
+plot(trendEvapMccook)
+abline(linTrendMccookEvap, col="red")
+slopeMccookEvap = linTrendMccookEvap$coefficients[2]
+slopeEvap = data.frame(slopeAngletonEvap, slopeBenbrookEvap, slopefortStocktonEvap, slopeMccookEvap)
+```
+
+```{r, echo=FALSE}
+#functions for the wind movement timeseries
+createWindIndexWind = function(rawData){
+  rawDataIndex = rawData$DATE
+  rawDataIndex.date = as.Date(rawDataIndex)
+  return(rawDataIndex.date)
+}
+
+fillMissingDatesWind = function(dates, dataFrame){
+  dateRange = seq(min(dates), max(dates), by = 1)
+  allDates = data.frame(dateRange)
+  colnames(allDates) = c("dateRange" = "DATE")
+  dataFrame = merge(dataFrame, allDates, all=TRUE)
+  dataFrame = dataFrame[!duplicated(dataFrame$DATE),]
+  return(dataFrame)
+}
+
+deleteNAsWind = function(frame){
+  if(sum(is.na(frame)) > 0){
+    frame = na.approx(frame)
+  } else {
+    print("no NA's")
+  }
+}
+
+tsTrendWind = function(start, dataFrame){
+  WindTS = ts(dataFrame$WDMV, start=start, frequency=365.25)
+  WindTS = na.approx(WindTS)
+  stlWindTS = stl(WindTS, s.window = "periodic")
+  trendWindTS = stlWindTS$time.series[,2]
+  return(trendWindTS)
+}
+
+forecastWind = function(xtsWind){
+  arimaWind = auto.arima(xtsWind)
+  fcastWind = forecast(arimaWind, h=100)
+  return(fcastWind)
+}
+
+statisticsWind = function(xtsWind){
+  mean = mean(xtsWind)
+  sd = sd(xtsWind)
+  min = min(xtsWind)
+  max = max(xtsWind)
+  var = var(xtsWind)
+  median = median(xtsWind)
+  firstQuartile = quantile(xtsWind, 0.25)
+  thirdQuartile = quantile(xtsWind, 0.75)
+  statistics = data.frame(mean, sd, min, max, var, median, firstQuartile, thirdQuartile)
+  return(statistics)
+}
+```
+
+```{r, echo=FALSE, fig.show="hide"}
+setwd("C:/Users/hans-/Documents/Master/1.Semester/ASTD/FinalAssignment/data")
+#analysis of the wind movement timeseries
+# Angleton, Texas in the South East near Houston
+# Wind timeseries for Angleton in the SouthEast of Texas
+angletonWind = read_xlsx("timeseries/Angleton, SE/Angleton, Wind.xlsx")
+angletonWindIndex = createWindIndexWind(angletonWind)
+
+#fill missing dates
+angletonWind = fillMissingDatesWind(angletonWindIndex, angletonWind)
+
+#create an xts object
+angletonWindIndex = createWindIndexWind(angletonWind)
+WindAngleton = xts(angletonWind$WDMV, angletonWindIndex)
+
+#delete NA's
+WindAngleton = deleteNAsWind(WindAngleton)
+
+#plot
+plot(WindAngleton)
+
+#plot acf and pacf of the timeseries
+acfAngletonWind = acf(WindAngleton, lag.max = 365)
+pacfAngletonWind = pacf(WindAngleton)
+
+#create trend
+start = as.Date("1953-01-01") 
+trendWindAngleton = tsTrendWind(start, angletonWind)
+
+#forecast
+fcastWindAngleton = forecastWind(WindAngleton)
+
+#statistics
+statisticsAngletonWind = statisticsWind(WindAngleton)
+
+
+
+
+# Benbrook Dam, Texas in the North East near Dallas
+# Precipitation timeseries for Benbrook in the NorthEast of Texas
+BenbrookWind = read_xlsx("timeseries/Benbrook, NE/Benbrook, Wind.xlsx")
+BenbrookWindIndex = createWindIndexWind(BenbrookWind)
+
+#fill missing dates
+BenbrookWind = fillMissingDatesWind(BenbrookWindIndex, BenbrookWind)
+
+#create an xts object
+BenbrookWindIndex = createWindIndexWind(BenbrookWind)
+WindBenbrook = xts(BenbrookWind$WDMV, BenbrookWindIndex)
+
+#delete NA's
+WindBenbrook = deleteNAsWind(WindBenbrook)
+
+#plot
+plot(WindBenbrook)
+
+#plot acf and pacf of the timeseries
+acfBenbrookWind = acf(WindBenbrook, lag.max = 365)
+pacfBenbrookWind = pacf(WindBenbrook)
+
+#create trend
+start = as.Date("1979-01-01") 
+trendWindBenbrook = tsTrendWind(start, BenbrookWind)
+
+#forecast
+fcastWindBenbrook = forecastWind(WindBenbrook)
+
+#statistics
+statisticsBenbrookWind = statisticsWind(WindBenbrook)
+
+
+
+# Fort Stockton, Texas in the North West near the border to New Mexico
+# Precipitation timeseries for Fort Stockton in the NorthWest of Texas
+fortStocktonWind = read_xlsx("timeseries/fortStockton, NW/fortStockton, Wind.xlsx")
+fortStocktonWindIndex = createWindIndexWind(fortStocktonWind)
+
+#fill missing dates
+fortStocktonWind = fillMissingDatesWind(fortStocktonWindIndex, fortStocktonWind)
+
+#create an xts object
+fortStocktonWindIndex = createWindIndexWind(fortStocktonWind)
+WindfortStockton = xts(fortStocktonWind$WDMV, fortStocktonWindIndex)
+
+#delete NA's
+WindfortStockton = deleteNAsWind(WindfortStockton)
+
+#plot
+plot(WindfortStockton)
+
+#plot acf and pacf of the timeseries
+acffortStocktonWind = acf(WindfortStockton, lag.max = 365)
+pacffortStocktonWind = pacf(WindfortStockton)
+
+#create trend
+start = as.Date("1950-01-01")
+trendWindfortStockton = tsTrendWind(start, fortStocktonWind)
+
+#forecast
+fcastWindfortStockton = forecastWind(WindfortStockton)
+
+#statistics
+statisticsfortStocktonWind = statisticsWind(WindfortStockton)
+
+
+
+# Mccook, Texas in the South West near the coast of the Golf of Mexico and the Mexican border
+# Precipitation timeseries for Mccook in the South West of Texas
+MccookWind = read_xlsx("timeseries/Mccook, SW/Mccook, Wind.xlsx")
+MccookWindIndex = createWindIndexWind(MccookWind)
+
+#fill missing dates
+MccookWind = fillMissingDatesWind(MccookWindIndex, MccookWind)
+
+#create an xts object
+MccookWindIndex = createWindIndexWind(MccookWind)
+WindMccook = xts(MccookWind$WDMV, MccookWindIndex)
+
+#delete NA's
+WindMccook = deleteNAsWind(WindMccook)
+
+#plot
+plot(WindMccook)
+
+#plot acf and pacf of the timeseries
+acfMccookWind = acf(WindMccook, lag.max = 365)
+pacfMccookWind = pacf(WindMccook)
+
+#create trend
+start = as.Date("1963-01-01")
+trendWindMccook = tsTrendWind(start, MccookWind)
+
+#forecast
+fcastWindMccook = forecastWind(WindMccook)
+
+#statistics
+statisticsMccookWind = statisticsWind(WindMccook)
+
+#boxplot of precipitation timeseries
+combineWindTS = merge(WindAngleton, WindBenbrook, WindfortStockton, WindMccook)
+combineWindTS = rename(combineWindTS, replace=c("WindAngleton" = "Angleton", "WindBenbrook" = "Benbrook", "WindfortStockton" = "Fort Stockton", "WindMccook" = "Mccook"))
+boxplot(coredata(combineWindTS))
+
+#linear models of the time series
+linTrendAngletonWind = lm(trendWindAngleton~time(trendWindAngleton))
+linTrendBenbrookWind = lm(trendWindBenbrook~time(trendWindBenbrook))
+linTrendfortStocktonWind = lm(trendWindfortStockton~time(trendWindfortStockton))
+linTrendMccookWind = lm(trendWindMccook~time(trendWindMccook))
+
+#plot trend of time series and compare linear regression with slope
+par(mfrow=c(1,1))
+plot(trendWindAngleton)
+abline(linTrendAngletonWind, col="red")
+slopeAngletonWind = linTrendAngletonWind$coefficients[2]
+plot(trendWindBenbrook)
+abline(linTrendBenbrookWind, col="red")
+slopeBenbrookWind = linTrendBenbrookWind$coefficients[2]
+plot(trendWindfortStockton)
+abline(linTrendfortStocktonWind, col="red")
+slopefortStocktonWind = linTrendfortStocktonWind$coefficients[2]
+plot(trendWindMccook)
+abline(linTrendMccookWind, col="red")
+slopeMccookWind = linTrendMccookWind$coefficients[2]
+slopeWind = data.frame(slopeAngletonWind, slopeBenbrookWind, slopefortStocktonWind, slopeMccookWind)
+```
+
+```{r, echo=FALSE, fig.show="hide"}
+#packages needed for the kriging part
+library("gstat")
+library("sp")
+library("rgdal")
+library("dplyr")
+
+#creation of the grid for the kriging interpolation
+texas = map('state', 'texas', fill=TRUE)
+texas2 = data.frame(LONGITUDE = texas$x, LATITUDE = texas$y)
+texas2 = na.omit(texas2)
+coordinates(texas2) = texas2[c(1,2)]
+proj4string(texas2) = CRS("+init=epsg:4326")
+texas2 = spTransform(texas2, CRS("+proj=utm +zone=13 +ellps=GRS80 +datum=NAD83 +units=m +no_defs"))
+
+texasGrid = spsample(texas2, type="regular")
+tx = as.data.frame(coordinates(texasGrid))
+names(tx) = c("LONGITUDE", "LATITUDE")
+coordinates(tx) = tx[c(1,2)]
+texasGrid = tx
+proj4string(texasGrid) = CRS("+proj=utm +zone=13 +ellps=GRS80 +datum=NAD83 +units=m +no_defs")
+
+texasMap = map2SpatialPolygons(texas, ID=texas$names)
+proj4string(texasMap) = CRS("+init=epsg:4326")
+texasMap = spTransform(texasMap, CRS("+proj=utm +zone=13 +ellps=GRS80 +datum=NAD83 +units=m +no_defs"))
+
+#function to compute basic statistics for data sets
+statisticsCompute = function(dataSet){
+  mean = mean(dataSet)
+  sd = sd(dataSet)
+  min = min(dataSet)
+  max = max(dataSet)
+  var = var(dataSet)
+  median = median(dataSet)
+  firstQuartile = quantile(dataSet, 0.25)
+  thirdQuartile = quantile(dataSet, 0.75)
+  statistics = data.frame(mean, sd, min, max, var, median, firstQuartile, thirdQuartile)
+  return(statistics)
+}
+```
+
+```{r, echo=FALSE}
+#functions for the kriging interpolation of the temperature data
+computeTempAverage = function(dataFrame){
+  dataFrameSubset = mutate(dataFrame, month = format(DATE, "%m"))
+  dataFrameMean = group_by(dataFrameSubset, STATION, NAME, LATITUDE, LONGITUDE, ELEVATION, month) %>% summarise(meanTemp = mean(TMAX, na.rm = T))
+  dataFrameMean$meanTemp = round(dataFrameMean$meanTemp, digits=4)
+  return(dataFrameMean)
+}
+
+coordinateTransformTemp = function(dataSet){
+  coordinates(dataSet) = dataSet[c(4,3)]
+  proj4string(dataSet) = CRS("+init=epsg:4326")
+  dataSet = spTransform(dataSet, CRS("+proj=utm +zone=13 +ellps=GRS80 +datum=NAD83 +units=m +no_defs"))
+  return(dataSet)
+}
+
+readDataTemp = function(path){
+  rawData = read_xlsx(path)
+  rawData$LATITUDE = as.numeric(rawData$LATITUDE)
+  rawData$LONGITUDE = as.numeric(rawData$LONGITUDE)
+  return(rawData)
+}
+```
+
+```{r, echo=FALSE, fig.show="hide"}
+#analysis and kriging interpolation of the temperature data
+                                # JANUARY 2015 #
+
+#Temperature values for January 2015 in Texas
+JanTmpMax2015 = readDataTemp("2015/Jan/2015-Jan-TMax.xlsx")
+
+#data frame with data for one day
+JanTmpMax2015Subset = computeTempAverage(JanTmpMax2015)
+JanTmpMax2015Subset = coordinateTransformTemp(JanTmpMax2015Subset)
+
+#statistics
+JanTmpMax2015Stats = statisticsCompute(JanTmpMax2015Subset$meanTemp)
+
+# variogram for the one day
+vJanTmpMax2015 = variogram(meanTemp ~ LATITUDE+LONGITUDE, JanTmpMax2015Subset)
+plot(vJanTmpMax2015)
+
+#fitting variogram
+vJanTmpMax2015.fit = fit.variogram(vJanTmpMax2015, vgm(2, 'Lin', 0, 1))
+plot(vJanTmpMax2015 ,vJanTmpMax2015.fit)
+
+#kriging
+JanTmpMax2015krige1 = krige(meanTemp ~ 1, JanTmpMax2015Subset, texasGrid, vJanTmpMax2015.fit)
+spplot(JanTmpMax2015krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
+
+
+
+
+
+                            # AUGUST 2015 #
+
+
+
+#Temperature values for Auguary 2015 in Texas
+AugTmpMax2015 = readDataTemp("2015/Aug/2015-Aug-TMax.xlsx")
+
+#data frame with data for one day
+AugTmpMax2015Subset = computeTempAverage(AugTmpMax2015)
+AugTmpMax2015Subset = coordinateTransformTemp(AugTmpMax2015Subset)
+
+#statistics
+AugTmpMax2015Stats = statisticsCompute(AugTmpMax2015Subset$meanTemp)
+
+# variogram for the one day
+vAugTmpMax2015 = variogram(meanTemp ~ LATITUDE+LONGITUDE, AugTmpMax2015Subset)
+plot(vAugTmpMax2015)
+
+#fitting variogram
+vAugTmpMax2015.fit = fit.variogram(vAugTmpMax2015, vgm(2, 'Lin', 0, 1))
+plot(vAugTmpMax2015 ,vAugTmpMax2015.fit)
+
+#kriging
+AugTmpMax2015krige1 = krige(meanTemp ~ 1, AugTmpMax2015Subset, texasGrid, vAugTmpMax2015.fit)
+spplot(AugTmpMax2015krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
+
+
+
+
+                                  # JANUARY 2005 #
+
+
+#Temperature values for January 2005 in Texas
+JanTmpMax2005 = readDataTemp("2005/Jan/2005-Jan-TMax.xlsx")
+
+#data frame with data for one day
+JanTmpMax2005Subset = computeTempAverage(JanTmpMax2005)
+JanTmpMax2005Subset = coordinateTransformTemp(JanTmpMax2005Subset)
+
+#statistics
+JanTmpMax2005Stats = statisticsCompute(JanTmpMax2005Subset$meanTemp)
+
+# variogram for the one day
+vJanTmpMax2005 = variogram(meanTemp ~ LATITUDE+LONGITUDE, JanTmpMax2005Subset)
+plot(vJanTmpMax2005)
+
+#fitting variogram
+vJanTmpMax2005.fit = fit.variogram(vJanTmpMax2005, vgm(2, 'Lin', 0, 1))
+plot(vJanTmpMax2005 ,vJanTmpMax2005.fit)
+
+#kriging
+JanTmpMax2005krige1 = krige(meanTemp ~ 1, JanTmpMax2005Subset, texasGrid, vJanTmpMax2005.fit)
+spplot(JanTmpMax2005krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
+
+
+
+
+
+# AUGUST 2005 #
+
+
+
+#Temperature values for Auguary 2005 in Texas
+AugTmpMax2005 = readDataTemp("2005/Aug/2005-Aug-TMax.xlsx")
+
+#data frame with data for one day
+AugTmpMax2005Subset = computeTempAverage(AugTmpMax2005)
+AugTmpMax2005Subset = coordinateTransformTemp(AugTmpMax2005Subset)
+
+#statistics
+AugTmpMax2005Stats = statisticsCompute(AugTmpMax2005Subset$meanTemp)
+
+# variogram for the one day
+vAugTmpMax2005 = variogram(meanTemp ~ LATITUDE+LONGITUDE, AugTmpMax2005Subset)
+plot(vAugTmpMax2005)
+
+#fitting variogram
+vAugTmpMax2005.fit = fit.variogram(vAugTmpMax2005, vgm(2, 'Lin', 0, 1))
+plot(vAugTmpMax2005 ,vAugTmpMax2005.fit)
+
+#kriging
+AugTmpMax2005krige1 = krige(meanTemp ~ 1, AugTmpMax2005Subset, texasGrid, vAugTmpMax2005.fit)
+spplot(AugTmpMax2005krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
+
+
+
+
+
+                                              # JANUARY 1995 #
+
+
+#Temperature values for January 1995 in Texas
+JanTmpMax1995 = readDataTemp("1995/Jan/1995-Jan-TMax.xlsx")
+
+#data frame with data for one day
+JanTmpMax1995Subset = computeTempAverage(JanTmpMax1995)
+JanTmpMax1995Subset = coordinateTransformTemp(JanTmpMax1995Subset)
+
+#statistics
+JanTmpMax1995Stats = statisticsCompute(JanTmpMax1995Subset$meanTemp)
+
+# variogram for the one day
+vJanTmpMax1995 = variogram(meanTemp ~ LATITUDE+LONGITUDE, JanTmpMax1995Subset)
+plot(vJanTmpMax1995)
+
+#fitting variogram
+vJanTmpMax1995.fit = fit.variogram(vJanTmpMax1995, vgm(2, 'Lin', 0, 1))
+plot(vJanTmpMax1995 ,vJanTmpMax1995.fit)
+
+#kriging
+JanTmpMax1995krige1 = krige(meanTemp ~ 1, JanTmpMax1995Subset, texasGrid, vJanTmpMax1995.fit)
+spplot(JanTmpMax1995krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
+
+
+
+
+
+# AUGUST 1995 #
+
+
+
+#Temperature values for Auguary 1995 in Texas
+AugTmpMax1995 = readDataTemp("1995/Aug/1995-Aug-TMax.xlsx")
+
+#data frame with data for one day
+AugTmpMax1995Subset = computeTempAverage(AugTmpMax1995)
+AugTmpMax1995Subset = coordinateTransformTemp(AugTmpMax1995Subset)
+
+#statistics
+AugTmpMax1995Stats = statisticsCompute(AugTmpMax1995Subset$meanTemp)
+
+# variogram for the one day
+vAugTmpMax1995 = variogram(meanTemp ~ LATITUDE+LONGITUDE, AugTmpMax1995Subset)
+plot(vAugTmpMax1995)
+
+#fitting variogram
+vAugTmpMax1995.fit = fit.variogram(vAugTmpMax1995, vgm(2, 'Lin', 0, 1))
+plot(vAugTmpMax1995 ,vAugTmpMax1995.fit)
+
+#kriging
+AugTmpMax1995krige1 = krige(meanTemp ~ 1, AugTmpMax1995Subset, texasGrid, vAugTmpMax1995.fit)
+spplot(AugTmpMax1995krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
+
+
+
+
+
+                                              # JANUARY 1985 #
+
+
+#Temperature values for January 1985 in Texas
+JanTmpMax1985 = readDataTemp("1985/Jan/1985-Jan-TMax.xlsx")
+
+#data frame with data for one day
+JanTmpMax1985Subset = computeTempAverage(JanTmpMax1985)
+JanTmpMax1985Subset = coordinateTransformTemp(JanTmpMax1985Subset)
+
+#statistics
+JanTmpMax1985Stats = statisticsCompute(JanTmpMax1985Subset$meanTemp)
+
+# variogram for the one day
+vJanTmpMax1985 = variogram(meanTemp ~ LATITUDE+LONGITUDE, JanTmpMax1985Subset)
+plot(vJanTmpMax1985)
+
+#fitting variogram
+vJanTmpMax1985.fit = fit.variogram(vJanTmpMax1985, vgm(2, 'Lin', 0, 1))
+plot(vJanTmpMax1985 ,vJanTmpMax1985.fit)
+
+#kriging
+JanTmpMax1985krige1 = krige(meanTemp ~ 1, JanTmpMax1985Subset, texasGrid, vJanTmpMax1985.fit)
+spplot(JanTmpMax1985krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
+
+
+
+
+
+# AUGUST 1985 #
+
+
+
+#Temperature values for Auguary 1985 in Texas
+AugTmpMax1985 = readDataTemp("1985/Aug/1985-Aug-TMax.xlsx")
+
+#data frame with data for one day
+AugTmpMax1985Subset = computeTempAverage(AugTmpMax1985)
+AugTmpMax1985Subset = coordinateTransformTemp(AugTmpMax1985Subset)
+
+#statistics
+AugTmpMax1985Stats = statisticsCompute(AugTmpMax1985Subset$meanTemp)
+
+# variogram for the one day
+vAugTmpMax1985 = variogram(meanTemp ~ LATITUDE+LONGITUDE, AugTmpMax1985Subset)
+plot(vAugTmpMax1985)
+
+#fitting variogram
+vAugTmpMax1985.fit = fit.variogram(vAugTmpMax1985, vgm(2, 'Lin', 0, 1))
+plot(vAugTmpMax1985 ,vAugTmpMax1985.fit)
+
+#kriging
+AugTmpMax1985krige1 = krige(meanTemp ~ 1, AugTmpMax1985Subset, texasGrid, vAugTmpMax1985.fit)
+spplot(AugTmpMax1985krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
+
+
+
+
+
+                                        # JANUARY 1975 #
+
+
+#Temperature values for January 1975 in Texas
+JanTmpMax1975 = readDataTemp("1975/Jan/1975-Jan-TMax.xlsx")
+
+#data frame with data for one day
+JanTmpMax1975Subset = computeTempAverage(JanTmpMax1975)
+JanTmpMax1975Subset = coordinateTransformTemp(JanTmpMax1975Subset)
+
+#statistics
+JanTmpMax1975Stats = statisticsCompute(JanTmpMax1975Subset$meanTemp)
+
+# variogram for the one day
+vJanTmpMax1975 = variogram(meanTemp ~ LATITUDE+LONGITUDE, JanTmpMax1975Subset)
+plot(vJanTmpMax1975)
+
+#fitting variogram
+vJanTmpMax1975.fit = fit.variogram(vJanTmpMax1975, vgm(2, 'Lin', 0, 1))
+plot(vJanTmpMax1975 ,vJanTmpMax1975.fit)
+
+#kriging
+JanTmpMax1975krige1 = krige(meanTemp ~ 1, JanTmpMax1975Subset, texasGrid, vJanTmpMax1975.fit)
+spplot(JanTmpMax1975krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
+
+
+
+
+
+# AUGUST 1975 #
+
+
+
+#Temperature values for Auguary 1975 in Texas
+AugTmpMax1975 = readDataTemp("1975/Aug/1975-Aug-TMax.xlsx")
+
+#data frame with data for one day
+AugTmpMax1975Subset = computeTempAverage(AugTmpMax1975)
+AugTmpMax1975Subset = coordinateTransformTemp(AugTmpMax1975Subset)
+
+#statistics
+AugTmpMax1975Stats = statisticsCompute(AugTmpMax1975Subset$meanTemp)
+
+# variogram for the one day
+vAugTmpMax1975 = variogram(meanTemp ~ LATITUDE+LONGITUDE, AugTmpMax1975Subset)
+plot(vAugTmpMax1975)
+
+#fitting variogram
+vAugTmpMax1975.fit = fit.variogram(vAugTmpMax1975, vgm(2, 'Lin', 0, 1))
+plot(vAugTmpMax1975 ,vAugTmpMax1975.fit)
+
+#kriging
+AugTmpMax1975krige1 = krige(meanTemp ~ 1, AugTmpMax1975Subset, texasGrid, vAugTmpMax1975.fit)
+spplot(AugTmpMax1975krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
+
+
+
+
+
+                                      # JANUARY 1965 #
+
+
+#Temperature values for January 1965 in Texas
+JanTmpMax1965 = readDataTemp("1965/Jan/1965-Jan-TMax.xlsx")
+
+#data frame with data for one day
+JanTmpMax1965Subset = computeTempAverage(JanTmpMax1965)
+JanTmpMax1965Subset = coordinateTransformTemp(JanTmpMax1965Subset)
+
+#statistics
+JanTmpMax1965Stats = statisticsCompute(JanTmpMax1965Subset$meanTemp)
+
+# variogram for the one day
+vJanTmpMax1965 = variogram(meanTemp ~ LATITUDE+LONGITUDE, JanTmpMax1965Subset)
+plot(vJanTmpMax1965)
+
+#fitting variogram
+vJanTmpMax1965.fit = fit.variogram(vJanTmpMax1965, vgm(2, 'Lin', 0, 1))
+plot(vJanTmpMax1965 ,vJanTmpMax1965.fit)
+
+#kriging
+JanTmpMax1965krige1 = krige(meanTemp ~ 1, JanTmpMax1965Subset, texasGrid, vJanTmpMax1965.fit)
+spplot(JanTmpMax1965krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
+
+
+
+
+
+# AUGUST 1965 #
+
+
+
+#Temperature values for Auguary 1965 in Texas
+AugTmpMax1965 = readDataTemp("1965/Aug/1965-Aug-TMax.xlsx")
+
+#data frame with data for one day
+AugTmpMax1965Subset = computeTempAverage(AugTmpMax1965)
+AugTmpMax1965Subset = coordinateTransformTemp(AugTmpMax1965Subset)
+
+#statistics
+AugTmpMax1965Stats = statisticsCompute(AugTmpMax1965Subset$meanTemp)
+
+# variogram for the one day
+vAugTmpMax1965 = variogram(meanTemp ~ LATITUDE+LONGITUDE, AugTmpMax1965Subset)
+plot(vAugTmpMax1965)
+
+#fitting variogram
+vAugTmpMax1965.fit = fit.variogram(vAugTmpMax1965, vgm(2, 'Lin', 0, 1))
+plot(vAugTmpMax1965 ,vAugTmpMax1965.fit)
+
+#kriging
+AugTmpMax1965krige1 = krige(meanTemp ~ 1, AugTmpMax1965Subset, texasGrid, vAugTmpMax1965.fit)
+spplot(AugTmpMax1965krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
+
+
+
+
+
+                                    # JANUARY 1955 #
+
+
+#Temperature values for January 1955 in Texas
+JanTmpMax1955 = readDataTemp("1955/Jan/1955-Jan-TMax.xlsx")
+
+#data frame with data for one day
+JanTmpMax1955Subset = computeTempAverage(JanTmpMax1955)
+JanTmpMax1955Subset = coordinateTransformTemp(JanTmpMax1955Subset)
+
+#statistics
+JanTmpMax1955Stats = statisticsCompute(JanTmpMax1955Subset$meanTemp)
+
+# variogram for the one day
+vJanTmpMax1955 = variogram(meanTemp ~ LATITUDE+LONGITUDE, JanTmpMax1955Subset)
+plot(vJanTmpMax1955)
+
+#fitting variogram
+vJanTmpMax1955.fit = fit.variogram(vJanTmpMax1955, vgm(2, 'Lin', 0, 1))
+plot(vJanTmpMax1955 ,vJanTmpMax1955.fit)
+
+#kriging
+JanTmpMax1955krige1 = krige(meanTemp ~ 1, JanTmpMax1955Subset, texasGrid, vJanTmpMax1955.fit)
+spplot(JanTmpMax1955krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
+
+
+
+
+
+# AUGUST 1955 #
+
+
+
+#Temperature values for Auguary 1955 in Texas
+AugTmpMax1955 = readDataTemp("1955/Aug/1955-Aug-TMax.xlsx")
+
+#data frame with data for one day
+AugTmpMax1955Subset = computeTempAverage(AugTmpMax1955)
+AugTmpMax1955Subset = coordinateTransformTemp(AugTmpMax1955Subset)
+
+#statistics
+AugTmpMax1955Stats = statisticsCompute(AugTmpMax1955Subset$meanTemp)
+
+# variogram for the one day
+vAugTmpMax1955 = variogram(meanTemp ~ LATITUDE+LONGITUDE, AugTmpMax1955Subset)
+plot(vAugTmpMax1955)
+
+#fitting variogram
+vAugTmpMax1955.fit = fit.variogram(vAugTmpMax1955, vgm(2, 'Lin', 0, 1))
+plot(vAugTmpMax1955 ,vAugTmpMax1955.fit)
+
+#kriging
+AugTmpMax1955krige1 = krige(meanTemp ~ 1, AugTmpMax1955Subset, texasGrid, vAugTmpMax1955.fit)
+spplot(AugTmpMax1955krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
+```
+
+```{r, echo=FALSE}
+#functions for the kriging interpolation of the precipitation data
+computePrcpAverage = function(dataFrame){
+  dataFrameSubset = mutate(dataFrame, month = format(DATE, "%m"))
+  dataFrameMean = group_by(dataFrameSubset, STATION, NAME, LATITUDE, LONGITUDE, ELEVATION, month) %>% summarise(meanPrcp = mean(PRCP, na.rm = T))
+  dataFrameMean$meanPrcp = round(dataFrameMean$meanPrcp, digits=4)
+  dataFrameMean = dataFrameMean[!rowSums(dataFrameMean[7]>15),]
+  return(dataFrameMean)
+}
+
+coordinateTransformPrcp = function(dataSet){
+  coordinates(dataSet) = dataSet[c(4,3)]
+  proj4string(dataSet) = CRS("+init=epsg:4326")
+  dataSet = spTransform(dataSet, CRS("+proj=utm +zone=13 +ellps=GRS80 +datum=NAD83 +units=m +no_defs"))
+  return(dataSet)
+}
+
+readDataPrcp = function(path){
+  rawData = read_xlsx(path)
+  rawData$LATITUDE = as.numeric(rawData$LATITUDE)
+  rawData$LONGITUDE = as.numeric(rawData$LONGITUDE)
+  return(rawData)
+}
+```
+
+```{r, echo=FALSE, fig.show="hide"}
+#analysis and kriging interpolation of the precipitation data
+                                # JANUARY 2015 #
+
+# Precipitation values for January 2015 in Texas
+JanPrcp2015 = readDataPrcp("2015/Jan/2015-Jan-Prcp.xlsx")
+
+#data frame with data for one day
+JanPrcp2015Subset = computePrcpAverage(JanPrcp2015)
+JanPrcp2015Subset = coordinateTransformPrcp(JanPrcp2015Subset)
+
+#statistics
+JanPrcp2015Stats = statisticsCompute(JanPrcp2015Subset$meanPrcp)
+
+# variogram for the one day
+vJanPrcp2015 = variogram(meanPrcp ~ LATITUDE+LONGITUDE, JanPrcp2015Subset)
+plot(vJanPrcp2015)
+
+#fitting variogram
+vJanPrcp2015.fit = fit.variogram(vJanPrcp2015, vgm('Exp'))
+plot(vJanPrcp2015 ,vJanPrcp2015.fit)
+
+#kriging
+JanPrcp2015krige1 = krige(meanPrcp ~ 1, JanPrcp2015Subset, texasGrid, vJanPrcp2015.fit)
+spplot(JanPrcp2015krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
+
+
+
+
+
+  
+                                  # AUGUST 2015 #
+
+# Precipitation values for Auguary 2015 in Texas
+AugPrcp2015 = readDataPrcp("2015/Aug/2015-Aug-Prcp.xlsx")
+
+#data frame with data for one day
+AugPrcp2015Subset = computePrcpAverage(AugPrcp2015)
+AugPrcp2015Subset = coordinateTransformPrcp(AugPrcp2015Subset)
+
+#statistics
+AugPrcp2015Stats = statisticsCompute(AugPrcp2015Subset$meanPrcp)
+
+# variogram for the one day
+vAugPrcp2015 = variogram(meanPrcp ~ LATITUDE+LONGITUDE, AugPrcp2015Subset)
+plot(vAugPrcp2015)
+
+#fitting variogram
+vAugPrcp2015.fit = fit.variogram(vAugPrcp2015, vgm('Exp'))
+plot(vAugPrcp2015 ,vAugPrcp2015.fit)
+
+#kriging
+AugPrcp2015krige1 = krige(meanPrcp ~ 1, AugPrcp2015Subset, texasGrid, vAugPrcp2015.fit)
+spplot(AugPrcp2015krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
+
+
+
+
+
+
+                                      # JANUARY 2005 #
+
+# Precipitation values for January 2005 in Texas
+JanPrcp2005 = readDataPrcp("2005/Jan/2005-Jan-Prcp.xlsx")
+
+#data frame with data for one day
+JanPrcp2005Subset = computePrcpAverage(JanPrcp2005)
+JanPrcp2005Subset = coordinateTransformPrcp(JanPrcp2005Subset)
+
+#statistics
+JanPrcp2005Stats = statisticsCompute(JanPrcp2005Subset$meanPrcp)
+
+# variogram for the one day
+vJanPrcp2005 = variogram(meanPrcp ~ LATITUDE+LONGITUDE, JanPrcp2005Subset)
+plot(vJanPrcp2005)
+
+#fitting variogram
+vJanPrcp2005.fit = fit.variogram(vJanPrcp2005, vgm('Exp'))
+plot(vJanPrcp2005 ,vJanPrcp2005.fit)
+
+#kriging
+JanPrcp2005krige1 = krige(meanPrcp ~ 1, JanPrcp2005Subset, texasGrid, vJanPrcp2005.fit)
+spplot(JanPrcp2005krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
+
+
+
+
+
+
+# AUGUST 2005 #
+
+# Precipitation values for Auguary 2005 in Texas
+AugPrcp2005 = readDataPrcp("2005/Aug/2005-Aug-Prcp.xlsx")
+
+#data frame with data for one day
+AugPrcp2005Subset = computePrcpAverage(AugPrcp2005)
+AugPrcp2005Subset = coordinateTransformPrcp(AugPrcp2005Subset)
+
+#statistics
+AugPrcp2005Stats = statisticsCompute(AugPrcp2005Subset$meanPrcp)
+
+# variogram for the one day
+vAugPrcp2005 = variogram(meanPrcp ~ LATITUDE+LONGITUDE, AugPrcp2005Subset)
+plot(vAugPrcp2005)
+
+#fitting variogram
+vAugPrcp2005.fit = fit.variogram(vAugPrcp2005, vgm('Exp'))
+plot(vAugPrcp2005 ,vAugPrcp2005.fit)
+
+#kriging
+AugPrcp2005krige1 = krige(meanPrcp ~ 1, AugPrcp2005Subset, texasGrid, vAugPrcp2005.fit)
+spplot(AugPrcp2005krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
+
+
+
+
+
+                                        # JANUARY 1995 #
+
+# Precipitation values for January 1995 in Texas
+JanPrcp1995 = readDataPrcp("1995/Jan/1995-Jan-Prcp.xlsx")
+
+#data frame with data for one day
+JanPrcp1995Subset = computePrcpAverage(JanPrcp1995)
+JanPrcp1995Subset = coordinateTransformPrcp(JanPrcp1995Subset)
+
+#statistics
+JanPrcp1995Stats = statisticsCompute(JanPrcp1995Subset$meanPrcp)
+
+# variogram for the one day
+vJanPrcp1995 = variogram(meanPrcp ~ LATITUDE+LONGITUDE, JanPrcp1995Subset)
+plot(vJanPrcp1995)
+
+#fitting variogram
+vJanPrcp1995.fit = fit.variogram(vJanPrcp1995, vgm('Exp'))
+plot(vJanPrcp1995 ,vJanPrcp1995.fit)
+
+#kriging
+JanPrcp1995krige1 = krige(meanPrcp ~ 1, JanPrcp1995Subset, texasGrid, vJanPrcp1995.fit)
+spplot(JanPrcp1995krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
+
+
+
+
+
+
+# AUGUST 1995 #
+
+# Precipitation values for Auguary 1995 in Texas
+AugPrcp1995 = readDataPrcp("1995/Aug/1995-Aug-Prcp.xlsx")
+
+#data frame with data for one day
+AugPrcp1995Subset = computePrcpAverage(AugPrcp1995)
+AugPrcp1995Subset = coordinateTransformPrcp(AugPrcp1995Subset)
+
+#statistics
+AugPrcp1995Stats = statisticsCompute(AugPrcp1995Subset$meanPrcp)
+
+# variogram for the one day
+vAugPrcp1995 = variogram(meanPrcp ~ LATITUDE+LONGITUDE, AugPrcp1995Subset)
+plot(vAugPrcp1995)
+
+#fitting variogram
+vAugPrcp1995.fit = fit.variogram(vAugPrcp1995, vgm('Exp'))
+plot(vAugPrcp1995 ,vAugPrcp1995.fit)
+
+#kriging
+AugPrcp1995krige1 = krige(meanPrcp ~ 1, AugPrcp1995Subset, texasGrid, vAugPrcp1995.fit)
+spplot(AugPrcp1995krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
+
+
+
+
+
+                                          # JANUARY 1985 #
+
+# Precipitation values for January 1985 in Texas
+JanPrcp1985 = readDataPrcp("1985/Jan/1985-Jan-Prcp.xlsx")
+
+#data frame with data for one day
+JanPrcp1985Subset = computePrcpAverage(JanPrcp1985)
+JanPrcp1985Subset = coordinateTransformPrcp(JanPrcp1985Subset)
+
+#statistics
+JanPrcp1985Stats = statisticsCompute(JanPrcp1985Subset$meanPrcp)
+
+# variogram for the one day
+vJanPrcp1985 = variogram(meanPrcp ~ LATITUDE+LONGITUDE, JanPrcp1985Subset)
+plot(vJanPrcp1985)
+
+#fitting variogram
+vJanPrcp1985.fit = fit.variogram(vJanPrcp1985, vgm('Exp'))
+plot(vJanPrcp1985 ,vJanPrcp1985.fit)
+
+#kriging
+JanPrcp1985krige1 = krige(meanPrcp ~ 1, JanPrcp1985Subset, texasGrid, vJanPrcp1985.fit)
+spplot(JanPrcp1985krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
+
+
+
+
+
+
+# AUGUST 1985 #
+
+# Precipitation values for Auguary 1985 in Texas
+AugPrcp1985 = readDataPrcp("1985/Aug/1985-Aug-Prcp.xlsx")
+
+#data frame with data for one day
+AugPrcp1985Subset = computePrcpAverage(AugPrcp1985)
+AugPrcp1985Subset = coordinateTransformPrcp(AugPrcp1985Subset)
+
+#statistics
+AugPrcp1985Stats = statisticsCompute(AugPrcp1985Subset$meanPrcp)
+
+# variogram for the one day
+vAugPrcp1985 = variogram(meanPrcp ~ LATITUDE+LONGITUDE, AugPrcp1985Subset)
+plot(vAugPrcp1985)
+
+#fitting variogram
+vAugPrcp1985.fit = fit.variogram(vAugPrcp1985, vgm('Exp'))
+plot(vAugPrcp1985 ,vAugPrcp1985.fit)
+
+#kriging
+AugPrcp1985krige1 = krige(meanPrcp ~ 1, AugPrcp1985Subset, texasGrid, vAugPrcp1985.fit)
+spplot(AugPrcp1985krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
+
+
+
+
+
+                                                  # JANUARY 1975 #
+
+# Precipitation values for January 1975 in Texas
+JanPrcp1975 = readDataPrcp("1975/Jan/1975-Jan-Prcp.xlsx")
+
+#data frame with data for one day
+JanPrcp1975Subset = computePrcpAverage(JanPrcp1975)
+JanPrcp1975Subset = coordinateTransformPrcp(JanPrcp1975Subset)
+
+#statistics
+JanPrcp1975Stats = statisticsCompute(JanPrcp1975Subset$meanPrcp)
+
+# variogram for the one day
+vJanPrcp1975 = variogram(meanPrcp ~ LATITUDE+LONGITUDE, JanPrcp1975Subset)
+plot(vJanPrcp1975)
+
+#fitting variogram
+vJanPrcp1975.fit = fit.variogram(vJanPrcp1975, vgm('Exp'))
+plot(vJanPrcp1975 ,vJanPrcp1975.fit)
+
+#kriging
+JanPrcp1975krige1 = krige(meanPrcp ~ 1, JanPrcp1975Subset, texasGrid, vJanPrcp1975.fit)
+spplot(JanPrcp1975krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
+
+
+
+
+
+
+# AUGUST 1975 #
+
+# Precipitation values for Auguary 1975 in Texas
+AugPrcp1975 = readDataPrcp("1975/Aug/1975-Aug-Prcp.xlsx")
+
+#data frame with data for one day
+AugPrcp1975Subset = computePrcpAverage(AugPrcp1975)
+AugPrcp1975Subset = coordinateTransformPrcp(AugPrcp1975Subset)
+
+#statistics
+AugPrcp1975Stats = statisticsCompute(AugPrcp1975Subset$meanPrcp)
+
+# variogram for the one day
+vAugPrcp1975 = variogram(meanPrcp ~ LATITUDE+LONGITUDE, AugPrcp1975Subset)
+plot(vAugPrcp1975)
+
+#fitting variogram
+vAugPrcp1975.fit = fit.variogram(vAugPrcp1975, vgm('Exp'))
+plot(vAugPrcp1975 ,vAugPrcp1975.fit)
+
+#kriging
+AugPrcp1975krige1 = krige(meanPrcp ~ 1, AugPrcp1975Subset, texasGrid, vAugPrcp1975.fit)
+spplot(AugPrcp1975krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
+
+
+
+
+
+                                    # JANUARY 1965 #
+
+# Precipitation values for January 1965 in Texas
+JanPrcp1965 = readDataPrcp("1965/Jan/1965-Jan-Prcp.xlsx")
+
+#data frame with data for one day
+JanPrcp1965Subset = computePrcpAverage(JanPrcp1965)
+JanPrcp1965Subset = coordinateTransformPrcp(JanPrcp1965Subset)
+
+#statistics
+JanPrcp1965Stats = statisticsCompute(JanPrcp1965Subset$meanPrcp)
+
+# variogram for the one day
+vJanPrcp1965 = variogram(meanPrcp ~ LATITUDE+LONGITUDE, JanPrcp1965Subset)
+plot(vJanPrcp1965)
+
+#fitting variogram
+vJanPrcp1965.fit = fit.variogram(vJanPrcp1965, vgm('Exp'))
+plot(vJanPrcp1965 ,vJanPrcp1965.fit)
+
+#kriging
+JanPrcp1965krige1 = krige(meanPrcp ~ 1, JanPrcp1965Subset, texasGrid, vJanPrcp1965.fit)
+spplot(JanPrcp1965krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
+
+
+
+
+
+
+# AUGUST 1965 #
+
+# Precipitation values for Auguary 1965 in Texas
+AugPrcp1965 = readDataPrcp("1965/Aug/1965-Aug-Prcp.xlsx")
+
+#data frame with data for one day
+AugPrcp1965Subset = computePrcpAverage(AugPrcp1965)
+AugPrcp1965Subset = coordinateTransformPrcp(AugPrcp1965Subset)
+
+#statistics
+AugPrcp1965Stats = statisticsCompute(AugPrcp1965Subset$meanPrcp)
+
+# variogram for the one day
+vAugPrcp1965 = variogram(meanPrcp ~ LATITUDE+LONGITUDE, AugPrcp1965Subset)
+plot(vAugPrcp1965)
+
+#fitting variogram
+vAugPrcp1965.fit = fit.variogram(vAugPrcp1965, vgm('Exp'))
+plot(vAugPrcp1965 ,vAugPrcp1965.fit)
+
+#kriging
+AugPrcp1965krige1 = krige(meanPrcp ~ 1, AugPrcp1965Subset, texasGrid, vAugPrcp1965.fit)
+spplot(AugPrcp1965krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
+
+
+
+
+
+                                    # JANUARY 1955 #
+
+# Precipitation values for January 1955 in Texas
+JanPrcp1955 = readDataPrcp("1955/Jan/1955-Jan-Prcp.xlsx")
+
+#data frame with data for one day
+JanPrcp1955Subset = computePrcpAverage(JanPrcp1955)
+JanPrcp1955Subset = coordinateTransformPrcp(JanPrcp1955Subset)
+
+#statistics
+JanPrcp1955Stats = statisticsCompute(JanPrcp1955Subset$meanPrcp)
+
+# variogram for the one day
+vJanPrcp1955 = variogram(meanPrcp ~ LATITUDE+LONGITUDE, JanPrcp1955Subset)
+plot(vJanPrcp1955)
+
+#fitting variogram
+vJanPrcp1955.fit = fit.variogram(vJanPrcp1955, vgm('Exp'))
+plot(vJanPrcp1955 ,vJanPrcp1955.fit)
+
+#kriging
+JanPrcp1955krige1 = krige(meanPrcp ~ 1, JanPrcp1955Subset, texasGrid, vJanPrcp1955.fit)
+spplot(JanPrcp1955krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
+
+
+
+
+
+
+# AUGUST 1955 #
+
+# Precipitation values for Auguary 1955 in Texas
+AugPrcp1955 = readDataPrcp("1955/Aug/1955-Aug-Prcp.xlsx")
+
+#data frame with data for one day
+AugPrcp1955Subset = computePrcpAverage(AugPrcp1955)
+AugPrcp1955Subset = coordinateTransformPrcp(AugPrcp1955Subset)
+
+#statistics
+AugPrcp1955Stats = statisticsCompute(AugPrcp1955Subset$meanPrcp)
+
+# variogram for the one day
+vAugPrcp1955 = variogram(meanPrcp ~ LATITUDE+LONGITUDE, AugPrcp1955Subset)
+plot(vAugPrcp1955)
+
+#fitting variogram
+vAugPrcp1955.fit = fit.variogram(vAugPrcp1955, vgm('Exp'))
+plot(vAugPrcp1955 ,vAugPrcp1955.fit)
+
+#kriging
+AugPrcp1955krige1 = krige(meanPrcp ~ 1, AugPrcp1955Subset, texasGrid, vAugPrcp1955.fit)
+spplot(AugPrcp1955krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
+```
+
+```{r, echo=FALSE}
+#functions for the kriging interpolation of the evaporation data
+computeEvapAverage = function(dataFrame){
+  dataFrameSubset = mutate(dataFrame, month = format(DATE, "%m"))
+  dataFrameMean = group_by(dataFrameSubset, STATION, NAME, LATITUDE, LONGITUDE, ELEVATION, month) %>% summarise(meanEvap = mean(EVAP, na.rm = T))
+  dataFrameMean$meanEvap = round(dataFrameMean$meanEvap, digits=4)
+  dataFrameMean = dataFrameMean[!rowSums(dataFrameMean[7]>30),]
+  return(dataFrameMean)
+}
+
+coordinateTransformEvap = function(dataSet){
+  coordinates(dataSet) = dataSet[c(4,3)]
+  proj4string(dataSet) = CRS("+init=epsg:4326")
+  dataSet = spTransform(dataSet, CRS("+proj=utm +zone=13 +ellps=GRS80 +datum=NAD83 +units=m +no_defs"))
+  return(dataSet)
+}
+
+readDataEvap = function(path){
+  rawData = read_xlsx(path)
+  rawData$LATITUDE = as.numeric(rawData$LATITUDE)
+  rawData$LONGITUDE = as.numeric(rawData$LONGITUDE)
+  return(rawData)
+}
+```
+
+```{r, echo=FALSE, fig.show="hide"}
+#analysis and kriging interpolation of the evaporation data
+                                      # JANUARY 2015 #
+
+# Evaporation values for January 2015 in Texas
+JanEvap2015 = readDataEvap("2015/Jan/2015-Jan-Evap.xlsx")
+
+#data frame with data for one day
+JanEvap2015Subset = computeEvapAverage(JanEvap2015)
+JanEvap2015Subset = coordinateTransformEvap(JanEvap2015Subset)
+
+#statistics
+JanEvap2015Stats = statisticsCompute(JanEvap2015Subset$meanEvap)
+
+# variogram for the one day
+vJanEvap2015 = variogram(meanEvap ~ LATITUDE+LONGITUDE, JanEvap2015Subset)
+plot(vJanEvap2015)
+
+#fitting variogram
+vJanEvap2015.fit = fit.variogram(vJanEvap2015, vgm(1.5, 'Lin', 0))
+plot(vJanEvap2015 ,vJanEvap2015.fit)
+
+#kriging
+JanEvap2015krige1 = krige(meanEvap ~ 1, JanEvap2015Subset, texasGrid, vJanEvap2015.fit)
+spplot(JanEvap2015krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
+
+
+
+
+
+
+                                            # AUGUST 2015 #
+
+# Evaporation values for Auguary 2015 in Texas
+AugEvap2015 = readDataEvap("2015/Aug/2015-Aug-Evap.xlsx")
+
+#data frame with data for one day
+AugEvap2015Subset = computeEvapAverage(AugEvap2015)
+AugEvap2015Subset = coordinateTransformEvap(AugEvap2015Subset)
+
+#statistics
+AugEvap2015Stats = statisticsCompute(AugEvap2015Subset$meanEvap)
+
+# variogram for the one day
+vAugEvap2015 = variogram(meanEvap ~ LATITUDE+LONGITUDE, AugEvap2015Subset)
+plot(vAugEvap2015)
+
+#fitting variogram
+vAugEvap2015.fit = fit.variogram(vAugEvap2015, vgm(1.5, 'Lin', 0))
+plot(vAugEvap2015 ,vAugEvap2015.fit)
+
+#kriging
+AugEvap2015krige1 = krige(meanEvap ~ 1, AugEvap2015Subset, texasGrid, vAugEvap2015.fit)
+spplot(AugEvap2015krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
+
+
+
+
+
+
+
+                                          # JANUARY 2005 #
+
+# Evaporation values for January 2005 in Texas
+JanEvap2005 = readDataEvap("2005/Jan/2005-Jan-Evap.xlsx")
+
+#data frame with data for one day
+JanEvap2005Subset = computeEvapAverage(JanEvap2005)
+JanEvap2005Subset = coordinateTransformEvap(JanEvap2005Subset)
+
+#statistics
+JanEvap2005Stats = statisticsCompute(JanEvap2005Subset$meanEvap)
+
+# variogram for the one day
+vJanEvap2005 = variogram(meanEvap ~ LATITUDE+LONGITUDE, JanEvap2005Subset)
+plot(vJanEvap2005)
+
+#fitting variogram
+vJanEvap2005.fit = fit.variogram(vJanEvap2005, vgm(1.5, 'Lin', 0))
+plot(vJanEvap2005 ,vJanEvap2005.fit)
+
+#kriging
+JanEvap2005krige1 = krige(meanEvap ~ 1, JanEvap2005Subset, texasGrid, vJanEvap2005.fit)
+spplot(JanEvap2005krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
+
+
+
+
+
+
+# AUGUST 2005 #
+
+# Evaporation values for Auguary 2005 in Texas
+AugEvap2005 = readDataEvap("2005/Aug/2005-Aug-Evap.xlsx")
+
+#data frame with data for one day
+AugEvap2005Subset = computeEvapAverage(AugEvap2005)
+AugEvap2005Subset = coordinateTransformEvap(AugEvap2005Subset)
+
+#statistics
+AugEvap2005Stats = statisticsCompute(AugEvap2005Subset$meanEvap)
+
+# variogram for the one day
+vAugEvap2005 = variogram(meanEvap ~ LATITUDE+LONGITUDE, AugEvap2005Subset)
+plot(vAugEvap2005)
+
+#fitting variogram
+vAugEvap2005.fit = fit.variogram(vAugEvap2005, vgm(1.5, 'Lin', 0))
+plot(vAugEvap2005 ,vAugEvap2005.fit)
+
+#kriging
+AugEvap2005krige1 = krige(meanEvap ~ 1, AugEvap2005Subset, texasGrid, vAugEvap2005.fit)
+spplot(AugEvap2005krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
+
+
+
+
+
+
+                                            # JANUARY 1995 #
+
+# Evaporation values for January 1995 in Texas
+JanEvap1995 = readDataEvap("1995/Jan/1995-Jan-Evap.xlsx")
+
+#data frame with data for one day
+JanEvap1995Subset = computeEvapAverage(JanEvap1995)
+JanEvap1995Subset = coordinateTransformEvap(JanEvap1995Subset)
+
+#statistics
+JanEvap1995Stats = statisticsCompute(JanEvap1995Subset$meanEvap)
+
+# variogram for the one day
+vJanEvap1995 = variogram(meanEvap ~ LATITUDE+LONGITUDE, JanEvap1995Subset)
+plot(vJanEvap1995)
+
+#fitting variogram
+vJanEvap1995.fit = fit.variogram(vJanEvap1995, vgm(1.5, 'Lin', 0))
+plot(vJanEvap1995 ,vJanEvap1995.fit)
+
+#kriging
+JanEvap1995krige1 = krige(meanEvap ~ 1, JanEvap1995Subset, texasGrid, vJanEvap1995.fit)
+spplot(JanEvap1995krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
+
+
+
+
+
+
+# AUGUST 1995 #
+
+# Evaporation values for Auguary 1995 in Texas
+AugEvap1995 = readDataEvap("1995/Aug/1995-Aug-Evap.xlsx")
+
+#data frame with data for one day
+AugEvap1995Subset = computeEvapAverage(AugEvap1995)
+AugEvap1995Subset = coordinateTransformEvap(AugEvap1995Subset)
+
+#statistics
+AugEvap1995Stats = statisticsCompute(AugEvap1995Subset$meanEvap)
+
+# variogram for the one day
+vAugEvap1995 = variogram(meanEvap ~ LATITUDE+LONGITUDE, AugEvap1995Subset)
+plot(vAugEvap1995)
+
+#fitting variogram
+vAugEvap1995.fit = fit.variogram(vAugEvap1995, vgm(1.5, 'Lin', 0))
+plot(vAugEvap1995 ,vAugEvap1995.fit)
+
+#kriging
+AugEvap1995krige1 = krige(meanEvap ~ 1, AugEvap1995Subset, texasGrid, vAugEvap1995.fit)
+spplot(AugEvap1995krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
+
+
+
+
+
+
+
+
+                                          # JANUARY 1985 #
+
+# Evaporation values for January 1985 in Texas
+JanEvap1985 = readDataEvap("1985/Jan/1985-Jan-Evap.xlsx")
+
+#data frame with data for one day
+JanEvap1985Subset = computeEvapAverage(JanEvap1985)
+JanEvap1985Subset = coordinateTransformEvap(JanEvap1985Subset)
+
+#statistics
+JanEvap1985Stats = statisticsCompute(JanEvap1985Subset$meanEvap)
+
+# variogram for the one day
+vJanEvap1985 = variogram(meanEvap ~ LATITUDE+LONGITUDE, JanEvap1985Subset)
+plot(vJanEvap1985)
+
+#fitting variogram
+vJanEvap1985.fit = fit.variogram(vJanEvap1985, vgm(1.5, 'Lin', 0))
+plot(vJanEvap1985 ,vJanEvap1985.fit)
+
+#kriging
+JanEvap1985krige1 = krige(meanEvap ~ 1, JanEvap1985Subset, texasGrid, vJanEvap1985.fit)
+spplot(JanEvap1985krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
+
+
+
+
+
+
+# AUGUST 1985 #
+
+# Evaporation values for Auguary 1985 in Texas
+AugEvap1985 = readDataEvap("1985/Aug/1985-Aug-Evap.xlsx")
+
+#data frame with data for one day
+AugEvap1985Subset = computeEvapAverage(AugEvap1985)
+AugEvap1985Subset = coordinateTransformEvap(AugEvap1985Subset)
+
+#statistics
+AugEvap1985Stats = statisticsCompute(AugEvap1985Subset$meanEvap)
+
+# variogram for the one day
+vAugEvap1985 = variogram(meanEvap ~ LATITUDE+LONGITUDE, AugEvap1985Subset)
+plot(vAugEvap1985)
+
+#fitting variogram
+vAugEvap1985.fit = fit.variogram(vAugEvap1985, vgm(1.5, 'Lin', 0))
+plot(vAugEvap1985 ,vAugEvap1985.fit)
+
+#kriging
+AugEvap1985krige1 = krige(meanEvap ~ 1, AugEvap1985Subset, texasGrid, vAugEvap1985.fit)
+spplot(AugEvap1985krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
+
+
+
+
+
+
+
+                                          # JANUARY 1975 #
+
+# Evaporation values for January 1975 in Texas
+JanEvap1975 = readDataEvap("1975/Jan/1975-Jan-Evap.xlsx")
+
+#data frame with data for one day
+JanEvap1975Subset = computeEvapAverage(JanEvap1975)
+JanEvap1975Subset = coordinateTransformEvap(JanEvap1975Subset)
+
+#statistics
+JanEvap1975Stats = statisticsCompute(JanEvap1975Subset$meanEvap)
+
+# variogram for the one day
+vJanEvap1975 = variogram(meanEvap ~ LATITUDE+LONGITUDE, JanEvap1975Subset)
+plot(vJanEvap1975)
+
+#fitting variogram
+vJanEvap1975.fit = fit.variogram(vJanEvap1975, vgm(1.5, 'Lin', 0))
+plot(vJanEvap1975 ,vJanEvap1975.fit)
+
+#kriging
+JanEvap1975krige1 = krige(meanEvap ~ 1, JanEvap1975Subset, texasGrid, vJanEvap1975.fit)
+spplot(JanEvap1975krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
+
+
+
+
+
+
+# AUGUST 1975 #
+
+# Evaporation values for Auguary 1975 in Texas
+AugEvap1975 = readDataEvap("1975/Aug/1975-Aug-Evap.xlsx")
+
+#data frame with data for one day
+AugEvap1975Subset = computeEvapAverage(AugEvap1975)
+AugEvap1975Subset = coordinateTransformEvap(AugEvap1975Subset)
+
+#statistics
+AugEvap1975Stats = statisticsCompute(AugEvap1975Subset$meanEvap)
+
+# variogram for the one day
+vAugEvap1975 = variogram(meanEvap ~ LATITUDE+LONGITUDE, AugEvap1975Subset)
+plot(vAugEvap1975)
+
+#fitting variogram
+vAugEvap1975.fit = fit.variogram(vAugEvap1975, vgm(1.5, 'Lin', 0))
+plot(vAugEvap1975 ,vAugEvap1975.fit)
+
+#kriging
+AugEvap1975krige1 = krige(meanEvap ~ 1, AugEvap1975Subset, texasGrid, vAugEvap1975.fit)
+spplot(AugEvap1975krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
+
+
+
+
+
+
+                                          # JANUARY 1965 #
+
+# Evaporation values for January 1965 in Texas
+JanEvap1965 = readDataEvap("1965/Jan/1965-Jan-Evap.xlsx")
+
+#data frame with data for one day
+JanEvap1965Subset = computeEvapAverage(JanEvap1965)
+JanEvap1965Subset = coordinateTransformEvap(JanEvap1965Subset)
+
+#statistics
+JanEvap1965Stats = statisticsCompute(JanEvap1965Subset$meanEvap)
+
+# variogram for the one day
+vJanEvap1965 = variogram(meanEvap ~ LATITUDE+LONGITUDE, JanEvap1965Subset)
+plot(vJanEvap1965)
+
+#fitting variogram
+vJanEvap1965.fit = fit.variogram(vJanEvap1965, vgm(1.5, 'Lin', 0))
+plot(vJanEvap1965 ,vJanEvap1965.fit)
+
+#kriging
+JanEvap1965krige1 = krige(meanEvap ~ 1, JanEvap1965Subset, texasGrid, vJanEvap1965.fit)
+spplot(JanEvap1965krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
+
+
+
+
+
+
+# AUGUST 1965 #
+
+# Evaporation values for Auguary 1965 in Texas
+AugEvap1965 = readDataEvap("1965/Aug/1965-Aug-Evap.xlsx")
+
+#data frame with data for one day
+AugEvap1965Subset = computeEvapAverage(AugEvap1965)
+AugEvap1965Subset = coordinateTransformEvap(AugEvap1965Subset)
+
+#statistics
+AugEvap1965Stats = statisticsCompute(AugEvap1965Subset$meanEvap)
+
+# variogram for the one day
+vAugEvap1965 = variogram(meanEvap ~ LATITUDE+LONGITUDE, AugEvap1965Subset)
+plot(vAugEvap1965)
+
+#fitting variogram
+vAugEvap1965.fit = fit.variogram(vAugEvap1965, vgm(1.5, 'Lin', 0))
+plot(vAugEvap1965 ,vAugEvap1965.fit)
+
+#kriging
+AugEvap1965krige1 = krige(meanEvap ~ 1, AugEvap1965Subset, texasGrid, vAugEvap1965.fit)
+spplot(AugEvap1965krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
+
+
+
+
+
+
+
+                                          # JANUARY 1955 #
+
+# Evaporation values for January 1955 in Texas
+JanEvap1955 = readDataEvap("1955/Jan/1955-Jan-Evap.xlsx")
+
+#data frame with data for one day
+JanEvap1955Subset = computeEvapAverage(JanEvap1955)
+JanEvap1955Subset = coordinateTransformEvap(JanEvap1955Subset)
+
+#statistics
+JanEvap1955Stats = statisticsCompute(JanEvap1955Subset$meanEvap)
+
+# variogram for the one day
+vJanEvap1955 = variogram(meanEvap ~ LATITUDE+LONGITUDE, JanEvap1955Subset)
+plot(vJanEvap1955)
+
+#fitting variogram
+vJanEvap1955.fit = fit.variogram(vJanEvap1955, vgm(1.5, 'Lin', 0))
+plot(vJanEvap1955 ,vJanEvap1955.fit)
+
+#kriging
+JanEvap1955krige1 = krige(meanEvap ~ 1, JanEvap1955Subset, texasGrid, vJanEvap1955.fit)
+spplot(JanEvap1955krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
+
+
+
+
+
+
+# AUGUST 1955 #
+
+# Evaporation values for Auguary 1955 in Texas
+AugEvap1955 = readDataEvap("1955/Aug/1955-Aug-Evap.xlsx")
+
+#data frame with data for one day
+AugEvap1955Subset = computeEvapAverage(AugEvap1955)
+AugEvap1955Subset = coordinateTransformEvap(AugEvap1955Subset)
+
+#statistics
+AugEvap1955Stats = statisticsCompute(AugEvap1955Subset$meanEvap)
+
+# variogram for the one day
+vAugEvap1955 = variogram(meanEvap ~ LATITUDE+LONGITUDE, AugEvap1955Subset)
+plot(vAugEvap1955)
+
+#fitting variogram
+vAugEvap1955.fit = fit.variogram(vAugEvap1955, vgm(1.5, 'Lin', 0))
+plot(vAugEvap1955 ,vAugEvap1955.fit)
+
+#kriging
+AugEvap1955krige1 = krige(meanEvap ~ 1, AugEvap1955Subset, texasGrid, vAugEvap1955.fit)
+spplot(AugEvap1955krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
+```
+
+```{r, echo=FALSE}
+#functions for the kriging interpolation of the wind data
+computeWindAverage = function(dataFrame){
+  dataFrameSubset = mutate(dataFrame, month = format(DATE, "%m"))
+  dataFrameMean = group_by(dataFrameSubset, STATION, NAME, LATITUDE, LONGITUDE, ELEVATION, month) %>% summarise(meanWind = mean(AWND, na.rm = T))
+  dataFrameMean$meanWind = round(dataFrameMean$meanWind, digits=4)
+  return(dataFrameMean)
+}
+
+coordinateTransformWind = function(dataSet){
+  coordinates(dataSet) = dataSet[c(4,3)]
+  proj4string(dataSet) = CRS("+init=epsg:4326")
+  dataSet = spTransform(dataSet, CRS("+proj=utm +zone=13 +ellps=GRS80 +datum=NAD83 +units=m +no_defs"))
+  return(dataSet)
+}
+
+readDataWind = function(path){
+  rawData = read_xlsx(path)
+  rawData$LATITUDE = as.numeric(rawData$LATITUDE)
+  rawData$LONGITUDE = as.numeric(rawData$LONGITUDE)
+  return(rawData)
+}
+```
+
+```{r, echo=FALSE, fig.show="hide"}
+#analysis and kriging interpolation of the wind data
+                                      # JANUARY 2015 #
+setwd("C:/Users/hans-/Documents/Master/1.Semester/ASTD/FinalAssignment/data")
+# Average wind speed values for January 2015 in Texas
+JanWind2015 = readDataWind("2015/Jan/2015-Jan-Wind.xlsx")
+
+#data frame with data for one day
+JanWind2015Subset = computeWindAverage(JanWind2015)
+JanWind2015Subset = coordinateTransformWind(JanWind2015Subset)
+
+#statistics
+JanWind2015Stats = statisticsCompute(JanWind2015Subset$meanWind)
+
+# variogram for the one day
+vJanWind2015 = variogram(meanWind ~ LATITUDE+LONGITUDE, JanWind2015Subset)
+plot(vJanWind2015)
+
+#fitting variogram
+vJanWind2015.fit = fit.variogram(vJanWind2015, vgm(1, 'Lin', 0))
+plot(vJanWind2015 ,vJanWind2015.fit)
+
+#kriging
+JanWind2015krige1 = krige(meanWind ~ 1, JanWind2015Subset, texasGrid, vJanWind2015.fit)
+spplot(JanWind2015krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
+
+
+
+
+
+
+
+                                            # AUGUST 2015 #
+
+# Average wind speed values for Auguary 2015 in Texas
+AugWind2015 = readDataWind("2015/Aug/2015-Aug-Wind.xlsx")
+
+#data frame with data for one day
+AugWind2015Subset = computeWindAverage(AugWind2015)
+AugWind2015Subset = coordinateTransformWind(AugWind2015Subset)
+
+#statistics
+AugWind2015Stats = statisticsCompute(AugWind2015Subset$meanWind)
+
+# variogram for the one day
+vAugWind2015 = variogram(meanWind ~ LATITUDE+LONGITUDE, AugWind2015Subset)
+plot(vAugWind2015)
+
+#fitting variogram
+vAugWind2015.fit = fit.variogram(vAugWind2015, vgm(1, 'Lin', 0))
+plot(vAugWind2015 ,vAugWind2015.fit)
+
+#kriging
+AugWind2015krige1 = krige(meanWind ~ 1, AugWind2015Subset, texasGrid, vAugWind2015.fit)
+spplot(AugWind2015krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
+
+
+
+
+
+                                              # JANUARY 2005 #
+
+# Average wind speed values for January 2005 in Texas
+JanWind2005 = readDataWind("2005/Jan/2005-Jan-Wind.xlsx")
+
+#data frame with data for one day
+JanWind2005Subset = computeWindAverage(JanWind2005)
+JanWind2005Subset = coordinateTransformWind(JanWind2005Subset)
+
+#statistics
+JanWind2005Stats = statisticsCompute(JanWind2005Subset$meanWind)
+
+# variogram for the one day
+vJanWind2005 = variogram(meanWind ~ LATITUDE+LONGITUDE, JanWind2005Subset)
+plot(vJanWind2005)
+
+#fitting variogram
+vJanWind2005.fit = fit.variogram(vJanWind2005, vgm(1, 'Lin', 0))
+plot(vJanWind2005 ,vJanWind2005.fit)
+
+#kriging
+JanWind2005krige1 = krige(meanWind ~ 1, JanWind2005Subset, texasGrid, vJanWind2005.fit)
+spplot(JanWind2005krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
+
+
+
+
+
+
+
+# AUGUST 2005 #
+
+# Average wind speed values for Auguary 2005 in Texas
+AugWind2005 = readDataWind("2005/Aug/2005-Aug-Wind.xlsx")
+
+#data frame with data for one day
+AugWind2005Subset = computeWindAverage(AugWind2005)
+AugWind2005Subset = coordinateTransformWind(AugWind2005Subset)
+
+#statistics
+AugWind2005Stats = statisticsCompute(AugWind2005Subset$meanWind)
+
+# variogram for the one day
+vAugWind2005 = variogram(meanWind ~ LATITUDE+LONGITUDE, AugWind2005Subset)
+plot(vAugWind2005)
+
+#fitting variogram
+vAugWind2005.fit = fit.variogram(vAugWind2005, vgm(1, 'Lin', 0))
+plot(vAugWind2005 ,vAugWind2005.fit)
+
+#kriging
+AugWind2005krige1 = krige(meanWind ~ 1, AugWind2005Subset, texasGrid, vAugWind2005.fit)
+spplot(AugWind2005krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
+
+
+
+
+
+
+
+
+                                                # JANUARY 1995 #
+
+# Average wind speed values for January 1995 in Texas
+JanWind1995 = readDataWind("1995/Jan/1995-Jan-Wind.xlsx")
+
+#data frame with data for one day
+JanWind1995Subset = computeWindAverage(JanWind1995)
+JanWind1995Subset = coordinateTransformWind(JanWind1995Subset)
+
+#statistics
+JanWind1995Stats = statisticsCompute(JanWind1995Subset$meanWind)
+
+# variogram for the one day
+vJanWind1995 = variogram(meanWind ~ LATITUDE+LONGITUDE, JanWind1995Subset)
+plot(vJanWind1995)
+
+#fitting variogram
+vJanWind1995.fit = fit.variogram(vJanWind1995, vgm(1, 'Lin', 0))
+plot(vJanWind1995 ,vJanWind1995.fit)
+
+#kriging
+JanWind1995krige1 = krige(meanWind ~ 1, JanWind1995Subset, texasGrid, vJanWind1995.fit)
+spplot(JanWind1995krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
+
+
+
+
+
+
+
+# AUGUST 1995 #
+
+# Average wind speed values for Auguary 1995 in Texas
+AugWind1995 = readDataWind("1995/Aug/1995-Aug-Wind.xlsx")
+
+#data frame with data for one day
+AugWind1995Subset = computeWindAverage(AugWind1995)
+AugWind1995Subset = coordinateTransformWind(AugWind1995Subset)
+
+#statistics
+AugWind1995Stats = statisticsCompute(AugWind1995Subset$meanWind)
+
+# variogram for the one day
+vAugWind1995 = variogram(meanWind ~ LATITUDE+LONGITUDE, AugWind1995Subset)
+plot(vAugWind1995)
+
+#fitting variogram
+vAugWind1995.fit = fit.variogram(vAugWind1995, vgm(1, 'Lin', 0))
+plot(vAugWind1995 ,vAugWind1995.fit)
+
+#kriging
+AugWind1995krige1 = krige(meanWind ~ 1, AugWind1995Subset, texasGrid, vAugWind1995.fit)
+spplot(AugWind1995krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
+
+
+
+
+
+
+                                      # JANUARY 1985 #
+
+# Average wind speed values for January 1985 in Texas
+JanWind1985 = readDataWind("1985/Jan/1985-Jan-Wind.xlsx")
+
+#data frame with data for one day
+JanWind1985Subset = computeWindAverage(JanWind1985)
+JanWind1985Subset = coordinateTransformWind(JanWind1985Subset)
+
+#statistics
+JanWind1985Stats = statisticsCompute(JanWind1985Subset$meanWind)
+
+# variogram for the one day
+vJanWind1985 = variogram(meanWind ~ LATITUDE+LONGITUDE, JanWind1985Subset)
+plot(vJanWind1985)
+
+#fitting variogram
+vJanWind1985.fit = fit.variogram(vJanWind1985, vgm(1, 'Lin', 0))
+plot(vJanWind1985 ,vJanWind1985.fit)
+
+#kriging
+JanWind1985krige1 = krige(meanWind ~ 1, JanWind1985Subset, texasGrid, vJanWind1985.fit)
+spplot(JanWind1985krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
+
+
+
+
+
+
+
+# AUGUST 1985 #
+
+# Average wind speed values for Auguary 1985 in Texas
+AugWind1985 = readDataWind("1985/Aug/1985-Aug-Wind.xlsx")
+
+#data frame with data for one day
+AugWind1985Subset = computeWindAverage(AugWind1985)
+AugWind1985Subset = coordinateTransformWind(AugWind1985Subset)
+
+#statistics
+AugWind1985Stats = statisticsCompute(AugWind1985Subset$meanWind)
+
+# variogram for the one day
+vAugWind1985 = variogram(meanWind ~ LATITUDE+LONGITUDE, AugWind1985Subset)
+plot(vAugWind1985)
+
+#fitting variogram
+vAugWind1985.fit = fit.variogram(vAugWind1985, vgm(1, 'Lin', 0))
+plot(vAugWind1985 ,vAugWind1985.fit)
+
+#kriging
+AugWind1985krige1 = krige(meanWind ~ 1, AugWind1985Subset, texasGrid, vAugWind1985.fit)
+spplot(AugWind1985krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
+```
+
 ## Abstract
 
-We know about the climate change and it's consequences since many years and a lot of research has been done in this field. The climate is a complex system compound of different elements like temperature, precipitation or wind. This paper aims to analyse the power of the climate change regarding these elements on the example of Texas. The effects of the climate change on air temperature, precipitation, wind speed and evaporation will be investigated. By analysing time series and kriging interpolations of data from weather stations across the state it showed out, that there is a remarkable climate change. The temperature is rising, precipitation becomes weaker, wind speed intensifies and evaporaation gets stronger. This paper gives another hint of the climate change and together with other examples we should take future political decisions with respect to this.
+We know about the climate change and it's consequences since many years and a lot of research has been done in this field. The climate is a complex system compound of different elements like temperature, precipitation or wind. This paper aims to analyse the power of the climate change regarding these elements on the example of Texas. The effects of the climate change on air temperature, precipitation, wind speed and evaporation will be investigated. By analysing time series and kriging interpolations of data from weather stations across the state it showed out, that there is a remarkable climate change. The temperature is rising, precipitation becomes weaker, wind speed intensifies and evaporaation gets stronger. This paper gives another hint to the climate change and together with other examples we should take future political decisions with respect to research in this field.
 
 ## Introduction
 
-Since Charles David Keeling presented his findings of an increase in the concentration of carbon dioxide in Earth's atmosphere people started believing in a human influenced climate change (Keeling Quelle). Before that it was known that there is a natural variability in the Earth's climate with changes into both extremes, cold and warm, over the last 800.000 years (variablity quelle). Based on Keelings data and other climatic investigations it became clear that the current global warming is strongly human-induced. With that knowledge many started investigating the impact of the climate change on natural and human environment. Above all the IPCC, the International Panel on Climate Change, provides information about the human-induced climate change, the risks and consequences of it and the possibilities of a climate mitigation (IPCC Website). The summarized findings of their researcher groups show that there is a remarkable rise of temperature and a lot of signficant changes in physical and biological systems in all parts of the earth (Paper 2007). They also show how the human is involved in this by producing greenhouse gases and strengthen the climate change (IPCC paper). To show how the climate change influences some of the most important climate elements: air temperature, precipitation, wind speed and evaporation, this paper investigates data gathered from weather stations all over Texas. Texas was chosen because it is a very large state (696,241 km2), is climatically interesting (containing three climate zones) and has a lot of easy accessible data (Almanac website). On top of that, Texas emits the most greenhouse gases of all states in the United States which makes it interesting to see the direct consequences of that(Dallas News). In addition to the book "The impact of global warming on Texas", by Schmandt et al. this paper takes a deeper look into data from single stations. In their work they gave an overview for the whole state regarding different climatic, biological and political factors and were able to show an remarkable climate change for precipitation and temperature (Buch Zitat). In this work the focus lies on the different stations with a conclusion on the whole state. Additionally, it will be checked if there are differences between the climate change at the coast and at the interior and a forecast for the next years will be given.
+Since Charles David Keeling presented his findings of an increase in the concentration of carbon dioxide in Earth's atmosphere people started believing in a human influenced climate change (Keeling, 1960). Before that it was known that there is a natural variability in the Earth's climate with changes into both extremes, cold and warm, over the last 800.000 years (Jouzel et al. 2007). Based on Keelings data and other climatic investigations it became clear that the current global warming is strongly human-induced. With that knowledge many started investigating the impact of the climate change on natural and human environment. Above all the IPCC, the Intergovernmental Panel on Climate Change, provides information about the human-induced climate change, the risks and consequences of it and the possibilities of a climate mitigation (IPCC, 2018). The summarized findings of their researcher groups show that there is a remarkable rise of temperature and a lot of signficant changes in physical and biological systems in all parts of the earth (IPCC Working Group 1, 2007). They also show how the human is involved in this by producing greenhouse gases and strengthen the climate change (IPCC Working Group 2, 2007). To show how the climate change influences some of the most important climate elements: air temperature, precipitation, wind speed and evaporation, this paper investigates data gathered from weather stations all over Texas. Texas was chosen because it is a very large state (696,241 km2), is climatically interesting (containing three climate zones) and has a lot of easy accessible data (Texas Almanac, 2018). On top of that, Texas emits the most greenhouse gases of all states in the United States which makes it interesting to see the direct consequences of that(DallasNews, 2007). In addition to the book "The impact of global warming on Texas", by Schmandt et al. this paper takes a deeper look into data from single stations. In their work they gave an overview for the whole state regarding different climatic, biological and political factors and were able to show an remarkable climate change for precipitation and temperature (Schmandt et al., 2011). In this work the focus lies on the different stations with a conclusion on the whole state. Additionally, it will be checked if there are differences between the climate change at the coast and at the interior and a forecast for the next years will be given.
 This work starts by giving an introduction to the used data and how that was gathered. After that the methods will be described which were used to analyse the data. This is followed by a presentation of the results and a discussion of the findings. It will be closed by a conclusion with an outlook to further research.
 
 ## Data
 
 Two different types of data are used for the analysis:
-* Time series data of four stations in Texas over the past 70 years
-* Single day data of all stations in Texas at the first of January and August every ten years
+* Time series data of four stations in Texas from 1950 until today
+* Averaged data of all stations in Texas of January and August every ten years from 1955 on
 The datasets involve the location of the station, the name and identifier of the station, the date of the observation and the measured value. Like stated in the introduction, the four daily measured climate elements are:
 * Maximum air temperature
 * Total precipitation
 * Average wind speed
 * Totale vaporation from an evaporation pan
-The four stations with the time series data were chosen to represent different parts of Texas (figure 1). To test if there are differences between the coastal regions and the interior one station for the four cardinal directions North, East, South and West were chosen. Since these stations have not measured the average wind speed, here the total wind movement was used for the analysis. The temporal amount of the time series reaches from 1950 until today. Not every series of data from the four stations covers the whole extent but these are the best fitting stations in sense of location and data coverage for this analysis. Missing data for single days is interploated or left out if longer periods are missing. 
+The four stations with the time series data were chosen to represent different parts of Texas (figure 1). To test if there are differences between the coastal regions and the interior one station for each of the four cardinal directions North, East, South and West were chosen.
+```{r, echo=FALSE}
+#plot of the locations of the four stations
+angletonPlot = angletonTemp[1,c(3,4,5)]
+coordinates(angletonPlot) = angletonPlot[c(3,2)]
+BenbrookPlot = BenbrookTemp[1,c(3,4,5)]
+coordinates(BenbrookPlot) = BenbrookPlot[c(3,2)]
+fortStocktonPlot = fortStocktonTemp[1,c(3,4,5)]
+coordinates(fortStocktonPlot) = fortStocktonPlot[c(3,2)]
+MccookPlot = MccookTemp[1,c(3,4,5)]
+coordinates(MccookPlot) = MccookPlot[c(3,2)]
+map('state', 'texas')
+title(main="Locations of the four used stations in Texas for the time series analysis")
+plot(angletonPlot, add=TRUE, pch=15, col="blue")
+text(angletonPlot, label=angletonPlot$NAME, pos=1, cex=.9)
+plot(BenbrookPlot, add=TRUE, pch=15, col="blue")
+text(BenbrookPlot, label=BenbrookPlot$NAME, pos=1, cex=.9)
+plot(fortStocktonPlot, add=TRUE, pch=15, col="blue")
+text(fortStocktonPlot, label=fortStocktonPlot$NAME, pos=1, cex=.9)
+plot(MccookPlot, add=TRUE, pch=15, col="blue")
+text(MccookPlot, label=MccookPlot$NAME, pos=1, cex=.9)
+```
+Since by these stations the average wind speed was not measured, the total wind movement is used for the analysis. The total wind movement is the summed wind speeds for one day. The temporal amount of the time series reaches from 1950 until today. Not every series of data from the four stations covers the whole extent, but the chosen ones are the best fitting stations in sense of location and data coverage for this analysis. Missing data for single days is interploated or left out if longer periods are missing.
+```{r, echo=FALSE}
+#example time series for every data type of the station in Fort Stockton
+plot(tmpMaxfortStockton)
+title(main="Daily Maximum Temperature in Fort Stockton, TX")
+plot(PrcpfortStockton)
+title(main="Daily Precipitation in Fort Stockton, TX")
+plot(EvapfortStockton)
+title(main="Daily Evaporation from an Evaporation Pan in Fort Stockton, TX")
+plot(WindfortStockton)
+title(main="Daily Total Wind Movement in Fort Stockton, TX")
+```
+The averaged data of entire Texas includes more than 4500 weather stations but not every station measures all of the presented climate elements. The values from January and August are averaged to get more representetative data. Missing data for single days will be omit in the average computation.
+```{r}
+#head of the averaged temperature dataset of Texas in January 2015 with UTM coordinates
+head(JanTmpMax2015Subset[c(1,2,3,4,7)])
+
+#head of the averaged precipitation dataset of Texas in January 2015 with UTM coordinates
+head(JanPrcp2015Subset[c(1,2,3,4,7)])
+
+#head of the averaged evaporation dataset of Texas in January 2015 with UTM coordinates
+head(JanEvap2015Subset[c(1,2,3,4,7)])
+
+#head of the averaged wind speed dataset of Texas in January 2015 with UTM coordinates
+head(JanWind2015Subset[c(1,2,3,4,7)])
+```
+The data is provided by the National Oceanic and Atmospheric Administration (NOAA) which is a scientific agency within the United Stated Department of Commerce (NOAA, 2018). Environmental data is publicly available on their website and is accessible by an interactive web service. 
 
 ## Methods
 
+The two different types of data mentioned above were also analysed with different methods. The time series data of the four stations in Texas were first converted into an `xts` object which provides nice visualizations and makes the handling easier. The autocorrelation and partial autocorrelation is computed to see if the data is autocorrelated. After that the trend of the time series is computed with the help of the `stl` function. The trends of the different stations are compared to see differences. To make this comparison easier a linear model on the trend is fitted. A forecast is made to take a look on the future development of the climate. Additionally, some basic statistic parameters will be computed. 
+The averaged data of all stations were first extended by WGS84 coordinates by converting the given numeric values for Latitude and Longitude. After that the coordinates were transformed into UTM coordinates so that linear units can be used. To compare the data from different years a kriging interpolation was made for every parameter in every given dataset. To be able to do that, a variogram needs to be computed and a model needs to be fitted to the variogram points. for every dataset the same variogram model was fitted so that the results are comparable. To predict the values of the locations where no measurement was made, a spatial grid is needed. In this case the map of Texas out of the `map` library was used and overlayed with a regular grid. Subsequent, ordinary kriging was performed and the results were visually compared. 
+
 ## Results
+
+In this chapter the results will be described, divided into the four investigated climate elements: Temperature, Precipitation, Evaporation and Wind.
+
+#### Temperature
+
+In the four temperature time series of the stations in Texas you can see that they all reach from 1950 until today. The yearly periodicities can be seen as well as the high variability between summer and winter. They all show a general rise of temperature which gets clearer if we take a look on the trend.
+```{r, echo=FALSE}
+#temperature time series of all four stations
+plot(tmpMaxAngleton)
+title(main="Temperature time series of Angleton in the East of Texas")
+
+plot(tmpMaxBenbrook)
+title(main="Temperature time series of Benbrook in the North of Texas")
+
+plot(tmpMaxfortStockton)
+title(main="Temperature time series of Fort Stockton in the West of Texas")
+
+plot(tmpMaxMccook)
+title(main="Temperature time series of Mccook in the South of Texas")
+```
+
+The trend of the temperature time series still show a lot variability but with the help of the linear model we can see that every series is rising. 
+```{r, echo=FALSE}
+#trends of all four temperature time series
+plot(trendTmpAngleton)
+abline(linTrendAngletonTemp, col="red")
+title(main="Trend of temperature time series of Angleton in the East of Texas")
+
+plot(trendTmpBenbrook)
+abline(linTrendBenbrookTemp, col="red")
+title(main="Trend of temperature time series of Benbrook in the North of Texas")
+
+plot(trendTmpfortStockton)
+abline(linTrendfortStocktonTemp, col="red")
+title(main = "Trend of temperature time series of Fort Stockton in the West of Texas")
+
+plot(trendTmpMccook)
+abline(linTrendMccookTemp, col="red")
+title(main="Trend of temperature time series of Mccook in the South of Texas")
+```
+In the autocorrelation plot up to lag 365 of the time series, representing one year, you can see the periodic variation. In the summer the months the autocorrelation turns negative because of the deviation from the mean in the other direction.
+```{r, echo=FALSE}
+#autocorrelation plot of the Angleton temperature time series
+plot(acfAngletonTemp)
+title(main="Autocorrelation plot of the temperature time series of Angleton, TX")
+```
+If we look on the forecasts for the next 100 observations, representing the next 100 days here, we see that for the stations in Benbrook, Fort Stockton and Mccook a further increase is predicted. Only for the station of Angleton the forecast is nearly static but the measured values at the end of the time series are already around 30 degrees in this case.
+```{r, echo=FALSE}
+#forecasts for the temperature time series
+plot(fcastTempAngleton, include=500, main="")
+title(main="100 days forecast for the temperature time series of Angleton, TX")
+
+plot(fcastTempBenbrook, include=500, main="")
+title(main="100 days forecast for the temperature time series of Benbrook, TX")
+
+plot(fcastTempfortStockton, include=500, main="")
+title(main="100 days forecast for the temperature time series of Fort Stockton, TX")
+
+plot(fcastTempMccook, include=500, main="")
+title(main="100 days forecast for the temperature time series of Mccook, TX")
+```
+
+Interestingly, the kriging interploation results for the averaged maximum temperature data sets in January show no rising trend. The plots show a clear division of temperature layers starting with the coldest in the north and getting warmer with less distance to the Golf of Mexico in the south. The January 2015 was even colder than the January of 1955.
+```{r, echo=FALSE}
+#kriging interpolation of maximum temperature in Texas in January
+spplot(JanTmpMax1955krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"),main="Temperature January 1955")
+spplot(JanTmpMax1965krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"), main="Temperature January 1965")
+spplot(JanTmpMax1975krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"), main="Temperature January 1975")
+spplot(JanTmpMax1985krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"), main="Temperature January 1985")
+spplot(JanTmpMax1995krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"), main="Temperature January 1995")
+spplot(JanTmpMax2005krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"), main="Temperature January 2005")
+spplot(JanTmpMax2015krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"), main="Temperature January 2015")
+```
+In addition to that the comparison of the mean, minimum temperature,maximum temperature and standard deviation shows the same results. The January was the second coldest after the Janaury 1985 and the January 1965 was the warmest. The difference between 2015 and 1955 show that it even was 2.2 degrees colder in January 2015. The standard deviation proves that the measurments don't differ much.
+```{r, echo=FALSE, results='asis'}
+tableDataTemp1 = data.frame(c(JanTmpMax1955Stats$mean,JanTmpMax1965Stats$mean, JanTmpMax1975Stats$mean,JanTmpMax1985Stats$mean,JanTmpMax1995Stats$mean,JanTmpMax2005Stats$mean,JanTmpMax2015Stats$mean, JanTmpMax2015Stats$mean - JanTmpMax1955Stats$mean),c(JanTmpMax1955Stats$min,JanTmpMax1965Stats$min,JanTmpMax1975Stats$min,JanTmpMax1985Stats$min,JanTmpMax1995Stats$min,JanTmpMax2005Stats$min,JanTmpMax2015Stats$min,JanTmpMax2015Stats$min - JanTmpMax1955Stats$min),c(JanTmpMax1955Stats$max,JanTmpMax1965Stats$max,JanTmpMax1975Stats$max,JanTmpMax1985Stats$max,JanTmpMax1995Stats$max,JanTmpMax2005Stats$max,JanTmpMax2015Stats$max, JanTmpMax2015Stats$max - JanTmpMax1955Stats$max), c(JanTmpMax1955Stats$sd,JanTmpMax1965Stats$sd,JanTmpMax1975Stats$sd,JanTmpMax1985Stats$sd,JanTmpMax1995Stats$sd,JanTmpMax2005Stats$sd,JanTmpMax2015Stats$sd, JanTmpMax2015Stats$sd - JanTmpMax1955Stats$sd))
+row.names(tableDataTemp1) = c("1955", "1965", "1975", "1985", "1995", "2005", "2015", "2015 - 1955")
+colnames(tableDataTemp1) = c("Mean", "Min", "Max", "Std. Dev.")
+knitr::kable(tableDataTemp1, "html", caption="Statistics of averaged Temperature values in January")
+```
+The kriging results for the averaged maximum temperature data sets in August again show no big rise but are rather very similar to one another. Unlike the plots from Janaury, there are no clear layers but the warmest parts are the ones at the Mexican border. The north and the area at the Golf of Mexico are colder. A little rise is recognizable when looking at the temperature classes which are highest in 2015.
+```{r, echo=FALSE}
+#kriging interpolation of maximum temperature in Texas in August
+spplot(AugTmpMax1955krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"),main="Temperature August 1955")
+spplot(AugTmpMax1965krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"), main="Temperature August 1965")
+spplot(AugTmpMax1975krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"), main="Temperature August 1975")
+spplot(AugTmpMax1985krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"), main="Temperature August 1985")
+spplot(AugTmpMax1995krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"), main="Temperature August 1995")
+spplot(AugTmpMax2005krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"), main="Temperature August 2005")
+spplot(AugTmpMax2015krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"), main="Temperature August 2015")
+```
+Corresponding to that the comparison of the mean, minimum temperature, maximum temperature and standard deviation shows only small changes in the mean temperature. The warmest August was 1985 and the coldest was 2005. The difference between 2015 and 1955 shows a rise of nearly one degree in the mean temperature but more than 2.5 degrees in the station with the highest temperatures. The standard deviation proves that the measurments don't differ much.
+```{r, echo=FALSE, results='asis'}
+tableDataTemp2 = data.frame(c(AugTmpMax1955Stats$mean,AugTmpMax1965Stats$mean, AugTmpMax1975Stats$mean,AugTmpMax1985Stats$mean,AugTmpMax1995Stats$mean,AugTmpMax2005Stats$mean,AugTmpMax2015Stats$mean, AugTmpMax2015Stats$mean - AugTmpMax1955Stats$mean),c(AugTmpMax1955Stats$min,AugTmpMax1965Stats$min,AugTmpMax1975Stats$min,AugTmpMax1985Stats$min,AugTmpMax1995Stats$min,AugTmpMax2005Stats$min,AugTmpMax2015Stats$min,AugTmpMax2015Stats$min - AugTmpMax1955Stats$min),c(AugTmpMax1955Stats$max,AugTmpMax1965Stats$max,AugTmpMax1975Stats$max,AugTmpMax1985Stats$max,AugTmpMax1995Stats$max,AugTmpMax2005Stats$max,AugTmpMax2015Stats$max, AugTmpMax2015Stats$max - AugTmpMax1955Stats$max), c(AugTmpMax1955Stats$sd,AugTmpMax1965Stats$sd,AugTmpMax1975Stats$sd,AugTmpMax1985Stats$sd,AugTmpMax1995Stats$sd,AugTmpMax2005Stats$sd,AugTmpMax2015Stats$sd, AugTmpMax2015Stats$sd - AugTmpMax1955Stats$sd))
+row.names(tableDataTemp2) = c("1955", "1965", "1975", "1985", "1995", "2005", "2015", "2015 - 1955")
+colnames(tableDataTemp2) = c("Mean", "Min", "Max", "Std. Dev.")
+knitr::kable(tableDataTemp2, "html", caption="Statistics of averaged Temperature values in August")
+```
+Taken both kriging interpolations into account we could say that maybe the impact of global warming is not that important in the winter months but shows its constant growths more in the summer months.
+
+If we compare the slope of the trend of the temperature time series we see that the rise is not very steep. Nevertheless, we can see a an obvious difference between the slope at the coast and in the interior. The slope in the interior is more than twice as steep which could indicate a stronger change of temperature here. A reason for this could be the higher heat storage capacity of the water which weakens the change at the coast.
+```{r, echo=FALSE, results='asis'}
+coastInteriorTemp = data.frame(c(slopeTemp$slopeAngletonTemp, slopeTemp$slopeMccookTemp, slopeTemp$slopeBenbrookTemp, slopeTemp$slopefortStocktonTemp, (slopeTemp$slopeAngletonTemp+slopeTemp$slopeMccookTemp)/2, (slopeTemp$slopeBenbrookTemp+slopeTemp$slopefortStocktonTemp)/2))
+row.names(coastInteriorTemp) = c("Angleton, East (Coast)", "Mccook, South (Coast)", "Benbrook, North (Interior)", "Fort Stockton, West (Interior)", "Mean (Coast)", "Mean(Interior)")
+colnames(coastInteriorTemp) = c("Slope of trend")
+knitr::kable(coastInteriorTemp, "html", caption="Slope of trend of the temperature time series on the coast and in the interior")
+```
+
+#### Precipitation
+
+The precipitation time series of the four stations in Texas all reach from 1950 until today. You can already see on the different y-axis that the amount of rainfall is very different in the different parts of Texas. Since there are many peaks in the data it is hard to recognize a trend.
+```{r, echo=FALSE}
+#Precipitation time series of all four stations
+plot(PrcpAngleton)
+title(main="Precipitation time series of Angleton in the East of Texas")
+
+plot(PrcpBenbrook)
+title(main="Precipitation time series of Benbrook in the North of Texas")
+
+plot(PrcpfortStockton)
+title(main="Precipitation time series of Fort Stockton in the West of Texas")
+
+plot(PrcpMccook)
+title(main="Precipitation time series of Mccook in the South of Texas")
+```
+
+If we plot just the trend of the time series we see that there is a general rise of precipitation. If we compare the trends of the series we see that three of the four stations have a rising precipitation and only in Mccook the trend is falling a little bit. Remembering that Mccook had the highest rise in temperature values this could be an explanation for absent precipitation.
+```{r, echo=FALSE}
+#trends of all four precipitation time series
+plot(trendPrcpAngleton)
+abline(linTrendAngletonPrcp, col="red")
+title(main="Trend of precipitation time series of Angleton in the East of Texas")
+
+plot(trendPrcpBenbrook)
+abline(linTrendBenbrookPrcp, col="red")
+title(main="Trend of precipitation time series of Benbrook in the North of Texas")
+
+plot(trendPrcpfortStockton)
+abline(linTrendfortStocktonPrcp, col="red")
+title(main = "Trend of precipitation time series of Fort Stockton in the West of Texas")
+
+plot(trendPrcpMccook)
+abline(linTrendMccookPrcp, col="red")
+title(main="Trend of precipitation time series of Mccook in the South of Texas")
+```
+The autocorrelation plot of the precipitation time series of Angleton up to lag 365, representing one year, shows that there is a significant autocorrelation up to lag 80. This means that the data is strongly autocorrelated. Unlike the temperature time series autocorrelation plot it shows no periodicities since the seasonal component is much weaker here.
+```{r, echo=FALSE}
+#autocorrelation plot of the Angleton precipitation time series
+plot(acfAngletonPrcp)
+title(main="Autocorrelation plot of the precipitation time series of Angleton, TX")
+```
+Since precipiftation is hard to predict, the forecast for the next 100 days of the precipitation time series is very constant. Beside that a little increase of precipitation is predicted. Since three of four time series have a lot of zero measurments before the forecast starts this is not very surprising and the predicted increase is really small.
+```{r, echo=FALSE}
+#forecasts for the precipitation time series
+plot(fcastPrcpAngleton, include=500, main="")
+title(main="100 days forecast for the precipitation time series of Angleton, TX")
+
+plot(fcastPrcpBenbrook, include=500, main="")
+title(main="100 days forecast for the precipitation time series of Benbrook, TX")
+
+plot(fcastPrcpfortStockton, include=500, main="")
+title(main="100 days forecast for the precipitation time series of Fort Stockton, TX")
+
+plot(fcastPrcpMccook, include=500, main="")
+title(main="100 days forecast for the precipitation time series of Mccook, TX")
+```
+
+The kriging interpolation of the precipitation data for January supports the findings of the time series analysis and shows a rise in precipitation. It is thereby not the maximum numbers which get higher but the areas with a high amount of rain become larger. The rainfall is always strongest in the regions in the east of Texas, adjacent to the Golf of Mexico. In January 2015 you can see that the area with the highest amount of rainfall (4.5mm - 5.2mm) are a lot larger than in the years before even if there the highest amount was higher.
+```{r, echo=FALSE}
+#kriging interpolation of maximum precipitation in Texas in January
+spplot(JanPrcp1955krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"),main="Precipitation January 1955")
+spplot(JanPrcp1965krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"), main="Precipitation January 1965")
+spplot(JanPrcp1975krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"), main="Precipitation January 1975")
+spplot(JanPrcp1985krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"), main="Precipitation January 1985")
+spplot(JanPrcp1995krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"), main="Precipitation January 1995")
+spplot(JanPrcp2005krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"), main="Precipitation January 2005")
+spplot(JanPrcp2015krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"), main="Precipitation January 2015")
+```
+In addition to that the comparison of the mean, minimum precipitation, maximum precipitation and standard deviation shows the really strong rise from all the years before to 2015. The mean of the precipitation is twice as high in 2015 compared to ten years before and compared to 1955 the mean has risen by 2.2mm. The standard deviation shows that the measurements do not differ much and even if it is highest in 2015 it is still low enough to not be distorted by outliers. 
+```{r, echo=FALSE, results='asis'}
+tableDataPrcp1 = data.frame(c(JanPrcp1955Stats$mean,JanPrcp1965Stats$mean, JanPrcp1975Stats$mean,JanPrcp1985Stats$mean,JanPrcp1995Stats$mean,JanPrcp2005Stats$mean,JanPrcp2015Stats$mean, JanPrcp2015Stats$mean - JanPrcp1955Stats$mean),c(JanPrcp1955Stats$min,JanPrcp1965Stats$min,JanPrcp1975Stats$min,JanPrcp1985Stats$min,JanPrcp1995Stats$min,JanPrcp2005Stats$min,JanPrcp2015Stats$min,JanPrcp2015Stats$min - JanPrcp1955Stats$min),c(JanPrcp1955Stats$max,JanPrcp1965Stats$max,JanPrcp1975Stats$max,JanPrcp1985Stats$max,JanPrcp1995Stats$max,JanPrcp2005Stats$max,JanPrcp2015Stats$max, JanPrcp2015Stats$max - JanPrcp1955Stats$max), c(JanPrcp1955Stats$sd,JanPrcp1965Stats$sd,JanPrcp1975Stats$sd,JanPrcp1985Stats$sd,JanPrcp1995Stats$sd,JanPrcp2005Stats$sd,JanPrcp2015Stats$sd, JanPrcp2015Stats$sd - JanPrcp1955Stats$sd))
+row.names(tableDataPrcp1) = c("1955", "1965", "1975", "1985", "1995", "2005", "2015", "2015 - 1955")
+colnames(tableDataPrcp1) = c("Mean", "Min", "Max", "Std. Dev.")
+knitr::kable(tableDataPrcp1, "html", caption="Statistics of averaged Precipitation values in January")
+```
+Unlike the kriging results for January, the results for August are not that distinct. There are no big visible changes from 1955 until 2015. Different to January there is not only much precipitation at the coast but also in the north of Texas. But the interpolation shows only very little rainfall for most parts of the state and so there are only very small changes mostly in the areas with the most predicted rainfall.
+```{r, echo=FALSE}
+#kriging interpolation of maximum precipitation in Texas in August
+spplot(AugPrcp1955krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"),main="Precipitation August 1955")
+spplot(AugPrcp1965krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"), main="Precipitation August 1965")
+spplot(AugPrcp1975krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"), main="Precipitation August 1975")
+spplot(AugPrcp1985krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"), main="Precipitation August 1985")
+spplot(AugPrcp1995krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"), main="Precipitation August 1995")
+spplot(AugPrcp2005krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"), main="Precipitation August 2005")
+spplot(AugPrcp2015krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"), main="Precipitation August 2015")
+```
+Interestingly, the comparison of the mean, minimum precipitation, maximum precipitation and standard deviation shows even a small decrease of rainfall in 2015. If you take into account that 2005 and 1995 the mean precipitation was always higher than before this could also be a surprisingly dry month. The fact that the maximum precipitation was highest in 2015 could also be a hint to an unusual result. Again the standar deviation shows that the data does not differ much.
+```{r, echo=FALSE, results='asis'}
+tableDataPrcp2 = data.frame(c(AugPrcp1955Stats$mean,AugPrcp1965Stats$mean, AugPrcp1975Stats$mean,AugPrcp1985Stats$mean,AugPrcp1995Stats$mean,AugPrcp2005Stats$mean,AugPrcp2015Stats$mean, AugPrcp2015Stats$mean - AugPrcp1955Stats$mean),c(AugPrcp1955Stats$min,AugPrcp1965Stats$min,AugPrcp1975Stats$min,AugPrcp1985Stats$min,AugPrcp1995Stats$min,AugPrcp2005Stats$min,AugPrcp2015Stats$min,AugPrcp2015Stats$min - AugPrcp1955Stats$min),c(AugPrcp1955Stats$max,AugPrcp1965Stats$max,AugPrcp1975Stats$max,AugPrcp1985Stats$max,AugPrcp1995Stats$max,AugPrcp2005Stats$max,AugPrcp2015Stats$max, AugPrcp2015Stats$max - AugPrcp1955Stats$max), c(AugPrcp1955Stats$sd,AugPrcp1965Stats$sd,AugPrcp1975Stats$sd,AugPrcp1985Stats$sd,AugPrcp1995Stats$sd,AugPrcp2005Stats$sd,AugPrcp2015Stats$sd, AugPrcp2015Stats$sd - AugPrcp1955Stats$sd))
+row.names(tableDataPrcp2) = c("1955", "1965", "1975", "1985", "1995", "2005", "2015", "2015 - 1955")
+colnames(tableDataPrcp2) = c("Mean", "Min", "Max", "Std. Dev.")
+knitr::kable(tableDataPrcp2, "html", caption="Statistics of averaged Precipitation values in August")
+```
+If you take both kriging results into account you could speak of a small rise in precipitation even if the interpolation of August is not completely distinct. 
+
+Appropriate to the results of the kriging interpolation the comparison of the slope of the trend for the time series at the coast and in the interior shows that the increase at the coast is three times higher than in the interior. Even if the slope in Mccook is decreasing, the steep slope in Angleton sets that off. Different to the temperature time series the changes are now higher at the coast.
+```{r, echo=FALSE, results='asis'}
+coastInteriorPrcp = data.frame(c(slopePrcp$slopeAngletonPrcp, slopePrcp$slopeMccookPrcp, slopePrcp$slopeBenbrookPrcp, slopePrcp$slopefortStocktonPrcp, (slopePrcp$slopeAngletonPrcp+slopePrcp$slopeMccookPrcp)/2, (slopePrcp$slopeBenbrookPrcp+slopePrcp$slopefortStocktonPrcp)/2))
+row.names(coastInteriorPrcp) = c("Angleton, East (Coast)", "Mccook, South (Coast)", "Benbrook, North (Interior)", "Fort Stockton, West (Interior)", "Mean (Coast)", "Mean(Interior)")
+colnames(coastInteriorPrcp) = c("Slope of trend")
+knitr::kable(coastInteriorPrcp, "html", caption="Slope of trend of the Precipitation time series on the coast and in the interior")
+```
+
+#### Evaporation
+
+The evaporation time series for the four stations are the first which not cover the whole extent from 1950 until today. The longest observation is the one in Mccook which reaches from 1963 until today. The time series of Angleton and Fort Stockton both start in the early 50's but end only ten years later in the early 60's. The time series of Benbrook starts in the late 70's but also reaches until today. To be consistent, the measurements were still used in the analysis but the results are not as comprehensive as for the other measurements. Like in the temperature time series we can also see the yearly periodicities can be seen. In none of the time series a clear trend is visible but for the two stations with the longest series it is visible that the peaks get higher with time.
+```{r, echo=FALSE}
+#Evaporation time series of all four stations
+plot(EvapAngleton)
+title(main="Evaporation time series of Angleton in the East of Texas")
+
+plot(EvapBenbrook)
+title(main="Evaporation time series of Benbrook in the North of Texas")
+
+plot(EvapfortStockton)
+title(main="Evaporation time series of Fort Stockton in the West of Texas")
+
+plot(EvapMccook)
+title(main="Evaporation time series of Mccook in the South of Texas")
+```
+
+Different from the assumption that the evaporation should be increasing due to higher temperatures, the trend of three of the four stations is decreasing. Even if we leave out the stations with too little data, the time series of the longest period also shows a decreasing trend. An explanation for this could be the increasing precipitation which prevents evaporation. According to research the increased cloud coverage and aerosol concentration lead to an decreased evaporation (Roderick and Farquhar, 2002). Since the peaks of the time series are a lot higher today, the evaporation on sunny days seems to be stronger than former.
+```{r, echo=FALSE}
+#trends of all four Evaporation time series
+plot(trendEvapAngleton)
+abline(linTrendAngletonEvap, col="red")
+title(main="Trend of Evaporation time series of Angleton in the East of Texas")
+
+plot(trendEvapBenbrook)
+abline(linTrendBenbrookEvap, col="red")
+title(main="Trend of Evaporation time series of Benbrook in the North of Texas")
+
+plot(trendEvapfortStockton)
+abline(linTrendfortStocktonEvap, col="red")
+title(main = "Trend of Evaporation time series of Fort Stockton in the West of Texas")
+
+plot(trendEvapMccook)
+abline(linTrendMccookEvap, col="red")
+title(main="Trend of Evaporation time series of Mccook in the South of Texas")
+```
+The autocorrelation plot for Angleton shows the seasonal periodicities of the evaporation. In the winter months there is only very little evaporation and in the summer months the evaporation is very high. 
+```{r, echo=FALSE}
+#autocorrelation plot of the Angleton Evaporation time series
+plot(acfAngletonEvap)
+title(main="Autocorrelation plot of the Evaporation time series of Angleton, TX")
+```
+According to the decreasing trend, also most of the forecasts expect a further decrease of evaporation. Interestingly the forecast for Mccook which also has a decreasing trend is strongly rising in the first days of the prediction. Overall the forecasts are rather static with only small changes.
+```{r, echo=FALSE}
+#forecasts for the Evaporation time series
+plot(fcastEvapAngleton, include=500, main="")
+title(main="100 days forecast for the Evaporation time series of Angleton, TX")
+
+plot(fcastEvapBenbrook, include=500, main="")
+title(main="100 days forecast for the Evaporation time series of Benbrook, TX")
+
+plot(fcastEvapfortStockton, include=500, main="")
+title(main="100 days forecast for the Evaporation time series of Fort Stockton, TX")
+
+plot(fcastEvapMccook, include=500, main="")
+title(main="100 days forecast for the Evaporation time series of Mccook, TX")
+```
+
+The kriging interpolation for January are also not showing a clear trend in the one or the other direction. Appropriate to the kriging results of the temperature data sets we see that the evaporation is strongest in the regions where the temperature is high. In this case this is at the border to Mexico in the southwest of Texas.
+```{r, echo=FALSE}
+#kriging interpolation of maximum Evaporation in Texas in January
+spplot(JanEvap1955krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"),main="Evaporation January 1955")
+spplot(JanEvap1965krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"), main="Evaporation January 1965")
+spplot(JanEvap1975krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"), main="Evaporation January 1975")
+spplot(JanEvap1985krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"), main="Evaporation January 1985")
+spplot(JanEvap1995krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"), main="Evaporation January 1995")
+spplot(JanEvap2005krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"), main="Evaporation January 2005")
+spplot(JanEvap2015krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"), main="Evaporation January 2015")
+```
+According to the previous findings the comparison of the basic statistics shows that there is no clear trend for the evaporation but it rather seems to decrease than to increase. This also fits to the paper of Roderick and Farquhar. Another interesting thing is that the maximum evaporation and the standard deviation are highest in 2015 since on sunny days the evaporation is stronger nowadays and the variations become higher. 
+```{r, echo=FALSE, results='asis'}
+tableDataEvap1 = data.frame(c(JanEvap1955Stats$mean,JanEvap1965Stats$mean, JanEvap1975Stats$mean,JanEvap1985Stats$mean,JanEvap1995Stats$mean,JanEvap2005Stats$mean,JanEvap2015Stats$mean, JanEvap2015Stats$mean - JanEvap1955Stats$mean),c(JanEvap1955Stats$min,JanEvap1965Stats$min,JanEvap1975Stats$min,JanEvap1985Stats$min,JanEvap1995Stats$min,JanEvap2005Stats$min,JanEvap2015Stats$min,JanEvap2015Stats$min - JanEvap1955Stats$min),c(JanEvap1955Stats$max,JanEvap1965Stats$max,JanEvap1975Stats$max,JanEvap1985Stats$max,JanEvap1995Stats$max,JanEvap2005Stats$max,JanEvap2015Stats$max, JanEvap2015Stats$max - JanEvap1955Stats$max), c(JanEvap1955Stats$sd,JanEvap1965Stats$sd,JanEvap1975Stats$sd,JanEvap1985Stats$sd,JanEvap1995Stats$sd,JanEvap2005Stats$sd,JanEvap2015Stats$sd, JanEvap2015Stats$sd - JanEvap1955Stats$sd))
+row.names(tableDataEvap1) = c("1955", "1965", "1975", "1985", "1995", "2005", "2015", "2015 - 1955")
+colnames(tableDataEvap1) = c("Mean", "Min", "Max", "Std. Dev.")
+knitr::kable(tableDataEvap1, "html", caption="Statistics of averaged Evaporation values in January")
+```
+The kriging interpolation results for August show no clear trend as well. Interestingly, the area with the strongest evaporation is now the northwest at the border to New Mexico. As expected the evaporation values are a lot higher since the temperatures are also a loth higher in August.
+```{r, echo=FALSE}
+#kriging interpolation of maximum Evaporation in Texas in August
+spplot(AugEvap1955krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"),main="Evaporation August 1955")
+spplot(AugEvap1965krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"), main="Evaporation August 1965")
+spplot(AugEvap1975krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"), main="Evaporation August 1975")
+spplot(AugEvap1985krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"), main="Evaporation August 1985")
+spplot(AugEvap1995krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"), main="Evaporation August 1995")
+spplot(AugEvap2005krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"), main="Evaporation August 2005")
+spplot(AugEvap2015krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"), main="Evaporation August 2015")
+```
+The comparison of the basic statistical values for the evaporation data sets fit to the ones from January. Beside the 2015 result it looks more like a decrease than an increase. Again the maximum evaporation value is from 2015 like the largest standard deviation. This indicates a stronger but more rare evaporation.  
+```{r, echo=FALSE, results='asis'}
+tableDataEvap2 = data.frame(c(AugEvap1955Stats$mean,AugEvap1965Stats$mean, AugEvap1975Stats$mean,AugEvap1985Stats$mean,AugEvap1995Stats$mean,AugEvap2005Stats$mean,AugEvap2015Stats$mean, AugEvap2015Stats$mean - AugEvap1955Stats$mean),c(AugEvap1955Stats$min,AugEvap1965Stats$min,AugEvap1975Stats$min,AugEvap1985Stats$min,AugEvap1995Stats$min,AugEvap2005Stats$min,AugEvap2015Stats$min,AugEvap2015Stats$min - AugEvap1955Stats$min),c(AugEvap1955Stats$max,AugEvap1965Stats$max,AugEvap1975Stats$max,AugEvap1985Stats$max,AugEvap1995Stats$max,AugEvap2005Stats$max,AugEvap2015Stats$max, AugEvap2015Stats$max - AugEvap1955Stats$max), c(AugEvap1955Stats$sd,AugEvap1965Stats$sd,AugEvap1975Stats$sd,AugEvap1985Stats$sd,AugEvap1995Stats$sd,AugEvap2005Stats$sd,AugEvap2015Stats$sd, AugEvap2015Stats$sd - AugEvap1955Stats$sd))
+row.names(tableDataEvap2) = c("1955", "1965", "1975", "1985", "1995", "2005", "2015", "2015 - 1955")
+colnames(tableDataEvap2) = c("Mean", "Min", "Max", "Std. Dev.")
+knitr::kable(tableDataEvap2, "html", caption="Statistics of averaged Evaporation values in August")
+```
+If we look at both kriging results it seems like the evaporation is not changing very strongly with the climate change. According to the findings of Roderick and Farquhar it seems to have a weak decreasing trend.
+
+The comparison of the slope of trends for the evaporation time series also show this decrease. These results have to be considered carefully since the time series not cover the same temporal extent. The comparison indicates that the decrease in the interior is higher than at the coast. This stands in contrast to the higher increase of temperature in the interior. But according to the presented research this does not have to be a contrast. 
+```{r, echo=FALSE, results='asis'}
+coastInteriorEvap = data.frame(c(slopeEvap$slopeAngletonEvap, slopeEvap$slopeMccookEvap, slopeEvap$slopeBenbrookEvap, slopeEvap$slopefortStocktonEvap, (slopeEvap$slopeAngletonEvap+slopeEvap$slopeMccookEvap)/2, (slopeEvap$slopeBenbrookEvap+slopeEvap$slopefortStocktonEvap)/2))
+row.names(coastInteriorEvap) = c("Angleton, East (Coast)", "Mccook, South (Coast)", "Benbrook, North (Interior)", "Fort Stockton, West (Interior)", "Mean (Coast)", "Mean(Interior)")
+colnames(coastInteriorEvap) = c("Slope of trend")
+knitr::kable(coastInteriorEvap, "html", caption="Slope of trend of the Evaporation time series on the coast and in the interior")
+```
+
+#### Wind
+
+The evaporation time series for the total wind movement cover like the evaporation time series not the full extent from 1950 until today. Again the stations of Benbrook and Mccook cover longer periods than the stations in Angleton and Fort Stockton. These stations only have data from the early 50' until the early 60's. The total wind movement is measured which represents the summed wind speeds for one day. We can see the yearly periodicity of the time series but no clear trend is visible.
+```{r, echo=FALSE}
+#Total Wind Movement time series of all four stations
+plot(WindAngleton)
+title(main="Total Wind Movement time series of Angleton in the East of Texas")
+
+plot(WindBenbrook)
+title(main="Total Wind Movement time series of Benbrook in the North of Texas")
+
+plot(WindfortStockton)
+title(main="Total Wind Movement time series of Fort Stockton in the West of Texas")
+
+plot(WindMccook)
+title(main="Total Wind Movement time series of Mccook in the South of Texas")
+```
+If we compare only the trends of the time series we see a very interesting pattern. The time series of Angleton and Benbrook have a weak increasing trend and the time series of Fort Stockton and Mccook have a strong decreasing trend. If we only consider the time series with the longer observation periods we also have one with an increasing trend (Benbrook) and one with a decreasing trend (Mccook).
+```{r, echo=FALSE}
+#trends of all four Total Wind Movement time series
+plot(trendWindAngleton)
+abline(linTrendAngletonWind, col="red")
+title(main="Trend of Total Wind Movement time series of Angleton in the East of Texas")
+
+plot(trendWindBenbrook)
+abline(linTrendBenbrookWind, col="red")
+title(main="Trend of Total Wind Movement time series of Benbrook in the North of Texas")
+
+plot(trendWindfortStockton)
+abline(linTrendfortStocktonWind, col="red")
+title(main = "Trend of Total Wind Movement time series of Fort Stockton in the West of Texas")
+
+plot(trendWindMccook)
+abline(linTrendMccookWind, col="red")
+title(main="Trend of Total Wind Movement time series of Mccook in the South of Texas")
+```
+The autocorrelation plot shows the same yearly periodicity as the temperature and the evaporation time series. So it seems like there is more wind movement in the winter months compared to the summer months.
+```{r, echo=FALSE}
+#autocorrelation plot of the Angleton Total Wind Movement time series
+plot(acfAngletonWind)
+title(main="Autocorrelation plot of the Total Wind Movement time series of Angleton, TX")
+```
+According to the trends of the time series the forecast for Angleton which had an increasing trend predicts also an increase of wind movement and for Mccook which had an decreasing trend an decrease of wind movement. Interestingly, the forecasts for the other two stations are different than there trends. For Benbrook the forecast predicts a strong decrease in opposite to the increasing trend. An explanation for this could be that the last measurement before the forecast is very high (over 200) and so a decrease is most likely. For Fort stockton an increase is predicted although the trend was stongly decreasing.
+```{r, echo=FALSE}
+#forecasts for the Total Wind Movement time series
+plot(fcastWindAngleton, include=500, main="")
+title(main="100 days forecast for the Total Wind Movement time series of Angleton, TX")
+
+plot(fcastWindBenbrook, include=500, main="")
+title(main="100 days forecast for the Total Wind Movement time series of Benbrook, TX")
+
+plot(fcastWindfortStockton, include=500, main="")
+title(main="100 days forecast for the Total Wind Movement time series of Fort Stockton, TX")
+
+plot(fcastWindMccook, include=500, main="")
+title(main="100 days forecast for the Total Wind Movement time series of Mccook, TX")
+```
+
+Different from the time series the data used for the kriging interpolation are the daily average wind speeds. Since these measurements are only observed since 1980 the kriging includes in this case only the years 1985, 1995, 2005 and 2015. The kriging results for January show no clear trend at first glance but although the results for 2015 and 2005 have very high borders for their wind speed classes these only apply for very small regions in the west of Texas. Since this leads to a confusing visualization a trend is hard to recognize in the results.
+```{r, echo=FALSE}
+#kriging interpolation of maximum Wind Speed in Texas in January
+spplot(JanWind1985krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"), main="Wind Speed January 1985")
+spplot(JanWind1995krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"), main="Wind Speed January 1995")
+spplot(JanWind2005krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"), main="Wind Speed January 2005")
+spplot(JanWind2015krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"), main="Wind Speed January 2015")
+```
+This gets easier when we compare the basic statistical values of the wind speed data sets. We see a distinct decreasing trend in wind speed. The average wind speed of 1985 is about 0.7 m/h faster compared to the average wind speed of 2015. Only the variablity gets stronger which is represented by the highest standard deviation in 2015. So we have on average a more slow wind speed but the days with an unusual high wind speed get more.
+```{r, echo=FALSE, results='asis'}
+tableDataWind1 = data.frame(c(JanWind1985Stats$mean,JanWind1995Stats$mean,JanWind2005Stats$mean,JanWind2015Stats$mean, JanWind2015Stats$mean - JanWind1985Stats$mean),c(JanWind1985Stats$min,JanWind1995Stats$min,JanWind2005Stats$min,JanWind2015Stats$min,JanWind2015Stats$min - JanWind1985Stats$min),c(JanWind1985Stats$max,JanWind1995Stats$max,JanWind2005Stats$max,JanWind2015Stats$max, JanWind2015Stats$max - JanWind1985Stats$max), c(JanWind1985Stats$sd,JanWind1995Stats$sd,JanWind2005Stats$sd,JanWind2015Stats$sd, JanWind2015Stats$sd - JanWind1985Stats$sd))
+row.names(tableDataWind1) = c("1985", "1995", "2005", "2015", "2015 - 1985")
+colnames(tableDataWind1) = c("Mean", "Min", "Max", "Std. Dev.")
+knitr::kable(tableDataWind1, "html", caption="Statistics of averaged Wind Speed values in January")
+```
+Like in January we also have a confusing visualization of 2015 and 2005 in August since some high measurements disturb the kriging. So it is again hard to recognize a trend in the kriging results. Like in January the highest wind speeds appear in the west and in the north of Texas. As expected the wind speeds in august are much slower tcompared to January. 
+```{r, echo=FALSE}
+#kriging interpolation of maximum Wind Speed in Texas in August
+spplot(AugWind1985krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"), main="Wind Speed August 1985")
+spplot(AugWind1995krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"), main="Wind Speed August 1995")
+spplot(AugWind2005krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"), main="Wind Speed August 2005")
+spplot(AugWind2015krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"), main="Wind Speed August 2015")
+```
+Unlike in January the comparison of the basic statistical values for the average wind speed data sets show no clear trend. If we would leave out 2015 there would be also an decreasing trend. Again the 2015 data set has the largest variability regarding the difference between the minimal and maximal value. Different from before the standard deviation is not highest in 2015. 
+```{r, echo=FALSE, results='asis'}
+tableDataWind2 = data.frame(c(AugWind1985Stats$mean,AugWind1995Stats$mean,AugWind2005Stats$mean,AugWind2015Stats$mean, AugWind2015Stats$mean - AugWind1985Stats$mean),c(AugWind1985Stats$min,AugWind1995Stats$min,AugWind2005Stats$min,AugWind2015Stats$min,AugWind2015Stats$min - AugWind1985Stats$min),c(AugWind1985Stats$max,AugWind1995Stats$max,AugWind2005Stats$max,AugWind2015Stats$max, AugWind2015Stats$max - AugWind1985Stats$max), c(AugWind1985Stats$sd,AugWind1995Stats$sd,AugWind2005Stats$sd,AugWind2015Stats$sd, AugWind2015Stats$sd - AugWind1985Stats$sd))
+row.names(tableDataWind2) = c("1985", "1995", "2005", "2015", "2015 - 1985")
+colnames(tableDataWind2) = c("Mean", "Min", "Max", "Std. Dev.")
+knitr::kable(tableDataWind2, "html", caption="Statistics of averaged Wind Speed values in August")
+```
+Summarized the wind speed seems to decrease with the climate change. Since there was a clear decreasing trend in the data sets of January and the differences in the data sets of August was only very small this indicates an overall decreasing trend.
+
+for the first time the comparison of the slope of trends for the time series shows no difference between the coast and the interior. This result has to be considered carefully since the time series have not the same temporal extent but as one station at the coast and one in the interior have a larger extent it is comparable. This again shows a decreasing overall trend of the wind movement. 
+```{r, echo=FALSE, results='asis'}
+coastInteriorWind = data.frame(c(slopeWind$slopeAngletonWind, slopeWind$slopeMccookWind, slopeWind$slopeBenbrookWind, slopeWind$slopefortStocktonWind, (slopeWind$slopeAngletonWind+slopeWind$slopeMccookWind)/2, (slopeWind$slopeBenbrookWind+slopeWind$slopefortStocktonWind)/2))
+row.names(coastInteriorWind) = c("Angleton, East (Coast)", "Mccook, South (Coast)", "Benbrook, North (Interior)", "Fort Stockton, West (Interior)", "Mean (Coast)", "Mean(Interior)")
+colnames(coastInteriorWind) = c("Slope of trend")
+knitr::kable(coastInteriorWind, "html", caption="Slope of trend of the Total Wind Movement time series on the coast and in the interior")
+```
 
 ## Discussion
 
+The results of the analysis show that there is a remarkable climate change in Texas over the last 70 years. The temperature has risen by about x degrees and is predicted to forther increase. The precipitation shows a small increase by about x mm and is also predicted to further increase. The evaporation is decreasing even if the results are not completely distinct. The wind speed and total wind movement are also decreasing.
+There are differences in the magnitude of the climate change at the coast and in the interior. At the coast the increase of temperature is stronger as well as the decrease of evaporation while the increase of precipitation is stronger in the interior. The decrease of wind speed and wind movement shows no differences between coast and interior.
+Unfortunately, the evaporation and total wind movement time series do not cover the full temporal extent from 1950 until today but sometimes only ten years of data. This could influence the results since they were analyzed in the same way as the other time series. With a more complete data set the results would be more meaningful. According to that it would be better to take more than four station into account to get more credible results. The same applies for the kriging interpolation. With more data from different months or also additional years the results could be different and would be more meaningful. Since the used data already has a size of about 100 megabyte it would be too computationally intensive to use more. The chosen data seemed to be the best fitting according to the research question.
+
 ## Conclusion
+
+There is a remarkable climate change in Texas regarding the climate elements temperature, precipitation, evaporation and wind speed. By this it provides an additional hint of the climate change and adds to the multitude of research in this field. 
+Further research should use more and different data for this analysis to proove these results and create more meaningful outcomes. Furthermore, other methods for the analysis could be used like dynamic time warping for example which provides algorithms to compare time series (Dynamic Time Warp Project, 2018).
 
 ## References
 
+DallasNews, 2007. "Texas No. 1 producer of greenhouse gases". Retrieved March 13, 2018 from: <https://web.archive.org/web/20080919052620/http://www.dallasnews.com/sharedcontent/dws/news/texassouthwest/stories/060307dnnatemissions.3c1df3a.html>
 
-```{r}
+Dynamic Time Warp Project, 2018. "Dynamic Time Warp project". Retrieved March 15, 2018 from: <http://dtw.r-forge.r-project.org/>
+
+IPCC, 2018. "Intergovernmental Panel On Climate Change". Retrieved March 13, 2018 from: <http://www.ipcc.ch/>
+
+IPCC Working Group 1, 2007. "Climate Change 2007: The Physical Science Basis". Contribution of Working Group I to the Fourth Assessment Report of the Intergovernmental Panel on Climate Change
+
+IPCC Working Group 2, 2007. "Climate Change 2007: Impacts, Adaptation and Vulnerability". Working Group II Contribution to the Intergovernmental Panel on Climate Change Fourth Assessment Report
+
+Jouzel, J. et al. 2007. "Orbital and Millennial Antarctic Climate Variability over the Past 800,000 Years". Science 317 (5839), 793-796. DOI: 10.1126/science.1141038
+
+Keeling, C. D., 1960. "The concentration and isotopic abundances of carbon dioxide in the atmosphere". Tellus Volume 12, Number 2
+
+NOAA, 2018. "Climate Data Online Search". Retrieved March 13, 2018 from: <https://www.ncdc.noaa.gov/cdo-web/search>
+
+Roderick, M. L. and Farquhar, G. D., 2002. "The Cause of Decreased Pan Evaporation over the Past 50 Years". Science 298 (5597), 1410-1411. DOI: 10.1126/science.1075390-a
+
+Schmandt, J., North, G. R. and Clarkson, J., 2011. "The impact of global warming on Texas". 2nd Edition. Austin, TX. University of Texas Press
+
+Texas Almanac, 2018. "Texas State Historical Association, Facts". Retrieved March 13, 2018 from: <http://texasalmanac.com/topics/facts-profile>
+
+```{r, echo=FALSE}
 
 ```
 
