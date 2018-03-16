@@ -3,23 +3,22 @@ Final Assignment for the university course Analysis of Spatio-Temporal data at t
 
 The topic of this final assignment is the climate change in Texas, USA
 
-# Manifestation of the climate change in Texas over the past 70 years
+# Manifestation of the climate change in Texas from 1950 until today
 
-## Introduction and research questions:
+## Abstract
 
-We know about the climate change and it's consequences since many years and a lot of research has been done in this field. To examine these consequences on a real world example on my own I chose Texas as a very large but also very interseting state of the USA with many different climatic conditions. To have a deeper look on the consequences I will analyze the wind speed, the maximum temperature, the precipitation and the evaporation measured on different weather stations across the state over the last 70 years. To handle that large amount of data I will use only the January and the August of every ten years from 1945 to 2015. Furthermore I will analyze continuous timeseries data from 4 different stations that are located in different parts of the state with data from 1950 until today.
-The research question then is: How has the climate changed in the past 70 years in Texas regarding the different climate parameters precipitation, temperature, wind and evaporation? Side questions to that would be: Are there differences between the climate change at the coast and in the interior and what is the forecast for the next years? Will it be stronger or could the climate change also become weaker?
+We know about the climate change and its consequences since many years and a lot of research has been done in this field. The climate is a complex system compound of different elements like temperature, precipitation or wind. This paper aims to analyse the power of the climate change regarding these elements on the example of Texas. The effects of the climate change on air temperature, precipitation, wind speed and evaporation will be investigated. By analysing time series and kriging interpolations of data from weather stations across the state it showed out, that there is a remarkable climate change. The temperature is rising, precipitation slightly increases, wind speed slowed, and evaporation becomes weaker. This paper gives another evidence to the climate change and together with other examples we should take future political decisions with respect to research in this field.
 
 ## About the files in this repository:
 
-In the data file you will find the datasets mentioned above:
-* The directories with the years contain data from the different stations from the month January and August
-* The timeseries directory contains timeseries data from 4 different stations spread across the state
+In the data directory you will find two types of data sets:
+* The directories with the years contain data from the different stations from the months January and August
+* The time series directory contains daily measurements from 4 different stations spread across the state
 
-The script files are some small scripts from me to try things out and you will find most of the code also in the markdowns
+The other folders contain scripts with parts of the conducted analysis and also scripts with some tests.
 
-The R-markdown file is the one where all information is collected and also the file which will contain my final result. In the moment there is only one markdown for the pre final Assignment to show what my plans are.
+The R-markdown file is the one where all information is collected and also the file which will contains my final result. This is the resulting paper.
 
 The HTML file is the already knitted version of my R-Markdown file.
 
-To reproduce it, just download the repository and knit the R-markdown file.
+To reproduce it, just download the repository and knit the R-markdown file. Be aware that the processing takes 5 - 10 minutes.
