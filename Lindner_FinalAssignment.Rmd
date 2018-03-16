@@ -1,10 +1,11 @@
 ---
 title: "Manifestation of the climate change in Texas from 1950 until today"
-author: "Hans-Christian Lindner"
-institute: "Institute for Geoinformatics"
-city: "Münster, Germany"
-e-mail: "h_lind04@uni-muenster.de"
-date: "17th of March 2018"
+author: |
+  | Hans-Christian Lindner
+  | Institute for Geoinformatics
+  | Münster, Germany
+  | h_lind04@uni-muenster.de
+date: "16th of March 2018"
 output: html_document
 ---
 
@@ -12,7 +13,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-```{r, echo=FALSE, warning=FALSE}
+```{r, echo=FALSE, warning=FALSE,  message=FALSE}
 #Loading in all important libraries
 library("readxl")
 library("maps")
@@ -21,11 +22,11 @@ library("mapdata")
 library("xts")
 library("plyr")
 library("forecast")
+library("kableExtra")
 setwd("data")
-setwd("C:/Users/hans-/Documents/Master/1.Semester/ASTD/FinalAssignment/data")
 ```
 
-```{r, echo=FALSE}
+```{r, echo=FALSE,  message=FALSE, warning=FALSE}
 #functions for the temperature timeseries
 createTempIndexTemp = function(rawData){
   rawDataIndex = rawData$DATE
@@ -78,8 +79,9 @@ statisticsTemp = function(xtsTemp){
 }
 ```
 
-```{r, echo=FALSE, fig.show="hide"}
+```{r, echo=FALSE, fig.show="hide",  message=FALSE, warning=FALSE}
 #analysis of the temperature timeseries
+setwd("data")
 # Angleton, Texas in the South East near Houston
 # Temperature timeseries for Angleton in the SouthEast of Texas
 angletonTemp = read_xlsx("timeseries/Angleton, SE/Angleton, TMax.xlsx")
@@ -240,7 +242,7 @@ slopeMccookTemp = linTrendMccookTemp$coefficients[2]
 slopeTemp = data.frame(slopeAngletonTemp, slopeBenbrookTemp, slopefortStocktonTemp, slopeMccookTemp)
 ```
 
-```{r, echo=FALSE}
+```{r, echo=FALSE,  message=FALSE, warning=FALSE}
 #functions for the precipitation timeseries
 createPrcpIndexPrcp = function(rawData){
   rawDataIndex = rawData$DATE
@@ -293,8 +295,9 @@ statisticsPrcp = function(xtsPrcp){
 }
 ```
 
-```{r, echo=FALSE, fig.show="hide"}
+```{r, echo=FALSE, fig.show="hide",  message=FALSE, warning=FALSE}
 #analysis of the precipitation timeseries
+setwd("data")
 # Angleton, Texas in the South East near Houston
 # Precipitation timeseries for Angleton in the SouthEast of Texas
 angletonPrcp = read_xlsx("timeseries/Angleton, SE/Angleton, Prcp.xlsx")
@@ -457,7 +460,7 @@ slopeMccookPrcp = linTrendMccookPrcp$coefficients[2]
 slopePrcp = data.frame(slopeAngletonPrcp, slopeBenbrookPrcp, slopefortStocktonPrcp, slopeMccookPrcp)
 ```
 
-```{r, echo=FALSE}
+```{r, echo=FALSE,  message=FALSE, warning=FALSE}
 #functions for the evaporation timeseries
 createEvapIndexEvap = function(rawData){
   rawDataIndex = rawData$DATE
@@ -510,8 +513,9 @@ statisticsEvap = function(xtsEvap){
 }
 ```
 
-```{r, echo=FALSE, fig.show="hide"}
+```{r, echo=FALSE, fig.show="hide",  message=FALSE, warning=FALSE}
 #analysis of the evaporation timeseries
+setwd("data")
 # Angleton, Texas in the South East near Houston
 # Evaporation timeseries for Angleton in the SouthEast of Texas
 angletonEvap = read_xlsx("timeseries/Angleton, SE/Angleton, Evap.xlsx")
@@ -674,7 +678,7 @@ slopeMccookEvap = linTrendMccookEvap$coefficients[2]
 slopeEvap = data.frame(slopeAngletonEvap, slopeBenbrookEvap, slopefortStocktonEvap, slopeMccookEvap)
 ```
 
-```{r, echo=FALSE}
+```{r, echo=FALSE,  message=FALSE, warning=FALSE}
 #functions for the wind movement timeseries
 createWindIndexWind = function(rawData){
   rawDataIndex = rawData$DATE
@@ -727,8 +731,8 @@ statisticsWind = function(xtsWind){
 }
 ```
 
-```{r, echo=FALSE, fig.show="hide"}
-setwd("C:/Users/hans-/Documents/Master/1.Semester/ASTD/FinalAssignment/data")
+```{r, echo=FALSE, fig.show="hide",  message=FALSE, warning=FALSE}
+setwd("data")
 #analysis of the wind movement timeseries
 # Angleton, Texas in the South East near Houston
 # Wind timeseries for Angleton in the SouthEast of Texas
@@ -893,7 +897,7 @@ slopeMccookWind = linTrendMccookWind$coefficients[2]
 slopeWind = data.frame(slopeAngletonWind, slopeBenbrookWind, slopefortStocktonWind, slopeMccookWind)
 ```
 
-```{r, echo=FALSE, fig.show="hide"}
+```{r, echo=FALSE, fig.show="hide",  message=FALSE, warning=FALSE}
 #packages needed for the kriging part
 library("gstat")
 library("sp")
@@ -934,7 +938,7 @@ statisticsCompute = function(dataSet){
 }
 ```
 
-```{r, echo=FALSE}
+```{r, echo=FALSE,  message=FALSE, warning=FALSE}
 #functions for the kriging interpolation of the temperature data
 computeTempAverage = function(dataFrame){
   dataFrameSubset = mutate(dataFrame, month = format(DATE, "%m"))
@@ -958,8 +962,9 @@ readDataTemp = function(path){
 }
 ```
 
-```{r, echo=FALSE, fig.show="hide"}
+```{r, echo=FALSE, fig.show="hide",  message=FALSE, warning=FALSE, results="hide"}
 #analysis and kriging interpolation of the temperature data
+setwd("data")
                                 # JANUARY 2015 #
 
 #Temperature values for January 2015 in Texas
@@ -1368,7 +1373,7 @@ AugTmpMax1955krige1 = krige(meanTemp ~ 1, AugTmpMax1955Subset, texasGrid, vAugTm
 spplot(AugTmpMax1955krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
 ```
 
-```{r, echo=FALSE}
+```{r, echo=FALSE,  message=FALSE, warning=FALSE}
 #functions for the kriging interpolation of the precipitation data
 computePrcpAverage = function(dataFrame){
   dataFrameSubset = mutate(dataFrame, month = format(DATE, "%m"))
@@ -1393,8 +1398,9 @@ readDataPrcp = function(path){
 }
 ```
 
-```{r, echo=FALSE, fig.show="hide"}
+```{r, echo=FALSE, fig.show="hide",  message=FALSE, warning=FALSE, results="hide"}
 #analysis and kriging interpolation of the precipitation data
+setwd("data")
                                 # JANUARY 2015 #
 
 # Precipitation values for January 2015 in Texas
@@ -1792,7 +1798,7 @@ AugPrcp1955krige1 = krige(meanPrcp ~ 1, AugPrcp1955Subset, texasGrid, vAugPrcp19
 spplot(AugPrcp1955krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
 ```
 
-```{r, echo=FALSE}
+```{r, echo=FALSE,  message=FALSE, warning=FALSE}
 #functions for the kriging interpolation of the evaporation data
 computeEvapAverage = function(dataFrame){
   dataFrameSubset = mutate(dataFrame, month = format(DATE, "%m"))
@@ -1817,8 +1823,9 @@ readDataEvap = function(path){
 }
 ```
 
-```{r, echo=FALSE, fig.show="hide"}
+```{r, echo=FALSE, fig.show="hide",  message=FALSE, warning=FALSE, results="hide"}
 #analysis and kriging interpolation of the evaporation data
+setwd("data")
                                       # JANUARY 2015 #
 
 # Evaporation values for January 2015 in Texas
@@ -2226,7 +2233,7 @@ AugEvap1955krige1 = krige(meanEvap ~ 1, AugEvap1955Subset, texasGrid, vAugEvap19
 spplot(AugEvap1955krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"))
 ```
 
-```{r, echo=FALSE}
+```{r, echo=FALSE,  message=FALSE, warning=FALSE}
 #functions for the kriging interpolation of the wind data
 computeWindAverage = function(dataFrame){
   dataFrameSubset = mutate(dataFrame, month = format(DATE, "%m"))
@@ -2250,10 +2257,11 @@ readDataWind = function(path){
 }
 ```
 
-```{r, echo=FALSE, fig.show="hide"}
+```{r, echo=FALSE, fig.show="hide",  message=FALSE, warning=FALSE, results="hide"}
 #analysis and kriging interpolation of the wind data
+setwd("data")
                                       # JANUARY 2015 #
-setwd("C:/Users/hans-/Documents/Master/1.Semester/ASTD/FinalAssignment/data")
+
 # Average wind speed values for January 2015 in Texas
 JanWind2015 = readDataWind("2015/Jan/2015-Jan-Wind.xlsx")
 
@@ -2487,25 +2495,32 @@ spplot(AugWind1985krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="w
 
 ## Abstract
 
-We know about the climate change and it's consequences since many years and a lot of research has been done in this field. The climate is a complex system compound of different elements like temperature, precipitation or wind. This paper aims to analyse the power of the climate change regarding these elements on the example of Texas. The effects of the climate change on air temperature, precipitation, wind speed and evaporation will be investigated. By analysing time series and kriging interpolations of data from weather stations across the state it showed out, that there is a remarkable climate change. The temperature is rising, precipitation becomes weaker, wind speed intensifies and evaporaation gets stronger. This paper gives another hint to the climate change and together with other examples we should take future political decisions with respect to research in this field.
+We know about the climate change and its consequences since many years and a lot of research has been done in this field. The climate is a complex system compound of different elements like temperature, precipitation or wind. This paper aims to analyse the power of the climate change regarding these elements on the example of Texas. The effects of the climate change on air temperature, precipitation, wind speed and evaporation will be investigated. By analysing time series and kriging interpolations of data from weather stations across the state it showed out, that there is a remarkable climate change. The temperature is rising, precipitation slightly increases, wind speed slowed, and evaporation becomes weaker. This paper gives another evidence to the climate change and together with other examples we should take future political decisions with respect to research in this field.
 
 ## Introduction
 
-Since Charles David Keeling presented his findings of an increase in the concentration of carbon dioxide in Earth's atmosphere people started believing in a human influenced climate change (Keeling, 1960). Before that it was known that there is a natural variability in the Earth's climate with changes into both extremes, cold and warm, over the last 800.000 years (Jouzel et al. 2007). Based on Keelings data and other climatic investigations it became clear that the current global warming is strongly human-induced. With that knowledge many started investigating the impact of the climate change on natural and human environment. Above all the IPCC, the Intergovernmental Panel on Climate Change, provides information about the human-induced climate change, the risks and consequences of it and the possibilities of a climate mitigation (IPCC, 2018). The summarized findings of their researcher groups show that there is a remarkable rise of temperature and a lot of signficant changes in physical and biological systems in all parts of the earth (IPCC Working Group 1, 2007). They also show how the human is involved in this by producing greenhouse gases and strengthen the climate change (IPCC Working Group 2, 2007). To show how the climate change influences some of the most important climate elements: air temperature, precipitation, wind speed and evaporation, this paper investigates data gathered from weather stations all over Texas. Texas was chosen because it is a very large state (696,241 km2), is climatically interesting (containing three climate zones) and has a lot of easy accessible data (Texas Almanac, 2018). On top of that, Texas emits the most greenhouse gases of all states in the United States which makes it interesting to see the direct consequences of that(DallasNews, 2007). In addition to the book "The impact of global warming on Texas", by Schmandt et al. this paper takes a deeper look into data from single stations. In their work they gave an overview for the whole state regarding different climatic, biological and political factors and were able to show an remarkable climate change for precipitation and temperature (Schmandt et al., 2011). In this work the focus lies on the different stations with a conclusion on the whole state. Additionally, it will be checked if there are differences between the climate change at the coast and at the interior and a forecast for the next years will be given.
-This work starts by giving an introduction to the used data and how that was gathered. After that the methods will be described which were used to analyse the data. This is followed by a presentation of the results and a discussion of the findings. It will be closed by a conclusion with an outlook to further research.
+Since Charles David Keeling presented his findings of an increase in the concentration of carbon dioxide in Earth's atmosphere, people started believing in a human influenced climate change (Keeling, 1960). Before that, the natural variability of the Earth's climate with changes into both extremes, cold and warm, over the last 800.000 years was known (Jouzel et al. 2007). Based on Keelings data and other climatic investigations it became clear that the current global warming is strongly human-induced. Since then, many started investigating the impact of the climate change on natural and human environment. Above all the IPCC, the Intergovernmental Panel on Climate Change, provides information about the human-induced climate change, the risks and consequences of it and the possibilities of a climate mitigation (IPCC, 2018). The summarized findings of their researcher groups show that there is a remarkable rise of temperature and a lot of significant changes in physical and biological systems in all parts of the earth (IPCC Working Group 1, 2007). Another working group shows the influence of the humans in the climate change (IPCC Working Group 2, 2007). 
+To show how the climate change influences some of the most important climate elements: air temperature, precipitation, wind speed and evaporation, this paper investigates data gathered from weather stations all over Texas. Texas was chosen because it is a very large state (696,241 km2), is climatically interesting (containing three climate zones) and has a lot of easy accessible data (Texas Almanac, 2018). On top of that, Texas emits the most greenhouse gases of all states in the United States which makes it to a massive climate sinner (DallasNews, 2007). In addition to the book "The impact of global warming on Texas", by Schmandt et al., this paper takes a deeper look into data from single stations. In their work they gave an overview for the whole state regarding different climatic, biological and political factors and were able to show a remarkable climate change for precipitation and temperature (Schmandt et al., 2011). In this work the focus lies on single stations and interpolated data out of that. Additionally, it will be checked if there are differences between the climate change at the coast and at the interior and a forecast for the next years will be given.
+This work starts by introducing the used data and how it was gathered. After that, the methods will be described which were used to analyse the data. This is followed by a presentation of the results and a discussion of the findings. It will be closed by a conclusion with an outlook to further research.
+
 
 ## Data
 
 Two different types of data are used for the analysis:
-* Time series data of four stations in Texas from 1950 until today
-* Averaged data of all stations in Texas of January and August every ten years from 1955 on
-The datasets involve the location of the station, the name and identifier of the station, the date of the observation and the measured value. Like stated in the introduction, the four daily measured climate elements are:
+
+* Daily time series data of four weather stations in Texas from 1950 until today
+* Averaged data of all weather stations in Texas of January and August every ten years from 1955 on
+
+The datasets involve the location of the station, the name and identifier of the station, the date of the observation and the measured value. The four measured climate elements are:
+
 * Maximum air temperature
 * Total precipitation
 * Average wind speed
-* Totale vaporation from an evaporation pan
-The four stations with the time series data were chosen to represent different parts of Texas (figure 1). To test if there are differences between the coastal regions and the interior one station for each of the four cardinal directions North, East, South and West were chosen.
-```{r, echo=FALSE}
+* Total evaporation from an evaporation pan
+
+The four stations with the time series data were chosen to represent different parts of Texas. To test if there are differences between the coastal regions and the interior, one station for each of the four cardinal directions north, east, south and west were chosen.
+
+```{r, echo=FALSE,  message=FALSE, warning=FALSE}
 #plot of the locations of the four stations
 angletonPlot = angletonTemp[1,c(3,4,5)]
 coordinates(angletonPlot) = angletonPlot[c(3,2)]
@@ -2518,27 +2533,27 @@ coordinates(MccookPlot) = MccookPlot[c(3,2)]
 map('state', 'texas')
 title(main="Locations of the four used stations in Texas for the time series analysis")
 plot(angletonPlot, add=TRUE, pch=15, col="blue")
-text(angletonPlot, label=angletonPlot$NAME, pos=1, cex=.9)
+text(angletonPlot, label=angletonPlot$NAME, pos=3, cex=.6)
 plot(BenbrookPlot, add=TRUE, pch=15, col="blue")
-text(BenbrookPlot, label=BenbrookPlot$NAME, pos=1, cex=.9)
+text(BenbrookPlot, label=BenbrookPlot$NAME, pos=3, cex=.6)
 plot(fortStocktonPlot, add=TRUE, pch=15, col="blue")
-text(fortStocktonPlot, label=fortStocktonPlot$NAME, pos=1, cex=.9)
+text(fortStocktonPlot, label=fortStocktonPlot$NAME, pos=3, cex=.6)
 plot(MccookPlot, add=TRUE, pch=15, col="blue")
-text(MccookPlot, label=MccookPlot$NAME, pos=1, cex=.9)
+text(MccookPlot, label=MccookPlot$NAME, pos=3, cex=.6)
 ```
-Since by these stations the average wind speed was not measured, the total wind movement is used for the analysis. The total wind movement is the summed wind speeds for one day. The temporal amount of the time series reaches from 1950 until today. Not every series of data from the four stations covers the whole extent, but the chosen ones are the best fitting stations in sense of location and data coverage for this analysis. Missing data for single days is interploated or left out if longer periods are missing.
-```{r, echo=FALSE}
-#example time series for every data type of the station in Fort Stockton
-plot(tmpMaxfortStockton)
-title(main="Daily Maximum Temperature in Fort Stockton, TX")
-plot(PrcpfortStockton)
-title(main="Daily Precipitation in Fort Stockton, TX")
-plot(EvapfortStockton)
-title(main="Daily Evaporation from an Evaporation Pan in Fort Stockton, TX")
-plot(WindfortStockton)
-title(main="Daily Total Wind Movement in Fort Stockton, TX")
+
+Since by the chosen stations only measured the total wind movement instead of average wind speed, this is used for the analysis. The total wind movement are the summed wind speeds for one day. The temporal amount of the time series reaches from 1950 until today. Not every series of data from the four stations covers the whole extent, but the chosen ones are the best fitting stations in sense of location and data coverage for this analysis. Missing data for single days is interpolated or left out if longer periods are missing.
+
+```{r, echo=FALSE,  message=FALSE, warning=FALSE}
+#example time series for every data type of the station in Mccook
+plot(tmpMaxMccook, main="Daily Maximum Temperature in Mccook, TX")
+plot(PrcpMccook, main="Daily Precipitation in Mccook, TX")
+plot(EvapMccook, main="Daily Evaporation from an Evaporation Pan in Mccook, TX")
+plot(WindMccook, main="Daily Total Wind Movement in Mccook, TX")
 ```
-The averaged data of entire Texas includes more than 4500 weather stations but not every station measures all of the presented climate elements. The values from January and August are averaged to get more representetative data. Missing data for single days will be omit in the average computation.
+
+The data of entire Texas includes more than 4500 weather stations but not every station measured all presented climate elements. The values from January and August are averaged daily measurements to get more representative data. Missing data for single days will be omit in the average computation.
+
 ```{r}
 #head of the averaged temperature dataset of Texas in January 2015 with UTM coordinates
 head(JanTmpMax2015Subset[c(1,2,3,4,7)])
@@ -2552,36 +2567,39 @@ head(JanEvap2015Subset[c(1,2,3,4,7)])
 #head of the averaged wind speed dataset of Texas in January 2015 with UTM coordinates
 head(JanWind2015Subset[c(1,2,3,4,7)])
 ```
+
 The data is provided by the National Oceanic and Atmospheric Administration (NOAA) which is a scientific agency within the United Stated Department of Commerce (NOAA, 2018). Environmental data is publicly available on their website and is accessible by an interactive web service. 
 
 ## Methods
 
-The two different types of data mentioned above were also analysed with different methods. The time series data of the four stations in Texas were first converted into an `xts` object which provides nice visualizations and makes the handling easier. The autocorrelation and partial autocorrelation is computed to see if the data is autocorrelated. After that the trend of the time series is computed with the help of the `stl` function. The trends of the different stations are compared to see differences. To make this comparison easier a linear model on the trend is fitted. A forecast is made to take a look on the future development of the climate. Additionally, some basic statistic parameters will be computed. 
-The averaged data of all stations were first extended by WGS84 coordinates by converting the given numeric values for Latitude and Longitude. After that the coordinates were transformed into UTM coordinates so that linear units can be used. To compare the data from different years a kriging interpolation was made for every parameter in every given dataset. To be able to do that, a variogram needs to be computed and a model needs to be fitted to the variogram points. for every dataset the same variogram model was fitted so that the results are comparable. To predict the values of the locations where no measurement was made, a spatial grid is needed. In this case the map of Texas out of the `map` library was used and overlayed with a regular grid. Subsequent, ordinary kriging was performed and the results were visually compared. 
+The two different types of data were analysed with different methods. The time series data of the four stations in Texas were first converted into an `xts` object which provides nice visualizations and makes the handling of them easier. The autocorrelation and partial autocorrelation is computed to see if the data is autocorrelated. The trend of the time series gets extracted with the help of the `stl` function. The trends of the different stations are compared to see differences. A linear model representing the trend is fitted to simplify the comparison. A forecast is made to look on the future development of the climate. Additionally, some basic statistical parameters will be computed. 
+The averaged data of all stations were first extended by WGS84 coordinates by converting the given numeric values for Latitude and Longitude. After that the coordinates were transformed into UTM coordinates so that linear units can be used. To compare the data from different years, a kriging interpolation was conducted for every parameter in every given dataset. To be able to do that, a variogram needs to be computed and a suitable model needs to be fitted. For every dataset of the climate elements the same variogram model was fitted to get comparable results. To predict the values of the locations where no measurement was made, a spatial grid is needed. In this case the map of Texas out of the `map` library was used and a regular grid was placed over it. Subsequent, ordinary kriging was performed and the results were visually compared. 
 
 ## Results
 
 In this chapter the results will be described, divided into the four investigated climate elements: Temperature, Precipitation, Evaporation and Wind.
 
-#### Temperature
 
-In the four temperature time series of the stations in Texas you can see that they all reach from 1950 until today. The yearly periodicities can be seen as well as the high variability between summer and winter. They all show a general rise of temperature which gets clearer if we take a look on the trend.
+### Temperature
+
+
+#### Time series data
+
+In the four temperature time series of the four stations in Texas from 1950 until today you can see the yearly periodicities as well as the high variability between summer and winter. They all show a general rise of temperature which gets clearer if we look only on the trend.
+
 ```{r, echo=FALSE}
 #temperature time series of all four stations
-plot(tmpMaxAngleton)
-title(main="Temperature time series of Angleton in the East of Texas")
+plot(tmpMaxAngleton, main="Temperature time series of Angleton in the East of Texas")
 
-plot(tmpMaxBenbrook)
-title(main="Temperature time series of Benbrook in the North of Texas")
+plot(tmpMaxBenbrook, main="Temperature time series of Benbrook in the North of Texas")
 
-plot(tmpMaxfortStockton)
-title(main="Temperature time series of Fort Stockton in the West of Texas")
+plot(tmpMaxfortStockton, main="Temperature time series of Fort Stockton in the West of Texas")
 
-plot(tmpMaxMccook)
-title(main="Temperature time series of Mccook in the South of Texas")
+plot(tmpMaxMccook, main="Temperature time series of Mccook in the South of Texas")
 ```
 
-The trend of the temperature time series still show a lot variability but with the help of the linear model we can see that every series is rising. 
+The trend of the temperature time series still shows a lot variability but with the help of the linear model we can see that every time series is increasing.
+
 ```{r, echo=FALSE}
 #trends of all four temperature time series
 plot(trendTmpAngleton)
@@ -2600,13 +2618,16 @@ plot(trendTmpMccook)
 abline(linTrendMccookTemp, col="red")
 title(main="Trend of temperature time series of Mccook in the South of Texas")
 ```
-In the autocorrelation plot up to lag 365 of the time series, representing one year, you can see the periodic variation. In the summer the months the autocorrelation turns negative because of the deviation from the mean in the other direction.
+
+In the autocorrelation plot up to lag 365 of the time series, you can see the periodicity. In the summer the autocorrelation turns negative because of the deviation from the mean in the other direction.
+
 ```{r, echo=FALSE}
 #autocorrelation plot of the Angleton temperature time series
-plot(acfAngletonTemp)
-title(main="Autocorrelation plot of the temperature time series of Angleton, TX")
+plot(acfAngletonTemp, main="Autocorrelation plot of the temperature time series of Angleton, TX")
 ```
-If we look on the forecasts for the next 100 observations, representing the next 100 days here, we see that for the stations in Benbrook, Fort Stockton and Mccook a further increase is predicted. Only for the station of Angleton the forecast is nearly static but the measured values at the end of the time series are already around 30 degrees in this case.
+
+If we look on the forecasts for the next 100 days, we see that for the stations in Benbrook, Fort Stockton and Mccook a further increase is predicted. Only for the station of Angleton the forecast is nearly static but since the series ends in high temperatures a further increase would make no sense.
+
 ```{r, echo=FALSE}
 #forecasts for the temperature time series
 plot(fcastTempAngleton, include=500, main="")
@@ -2622,7 +2643,11 @@ plot(fcastTempMccook, include=500, main="")
 title(main="100 days forecast for the temperature time series of Mccook, TX")
 ```
 
-Interestingly, the kriging interploation results for the averaged maximum temperature data sets in January show no rising trend. The plots show a clear division of temperature layers starting with the coldest in the north and getting warmer with less distance to the Golf of Mexico in the south. The January 2015 was even colder than the January of 1955.
+
+#### Averaged monthly data
+
+Interestingly, the kriging interpolation results for the averaged maximum temperature data sets of January show no increasing trend. The plots show a clear division of temperature layers starting with the coldest in the north and getting warmer with less distance to the Gulf of Mexico in the south. 
+
 ```{r, echo=FALSE}
 #kriging interpolation of maximum temperature in Texas in January
 spplot(JanTmpMax1955krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"),main="Temperature January 1955")
@@ -2633,14 +2658,19 @@ spplot(JanTmpMax1995krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col=
 spplot(JanTmpMax2005krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"), main="Temperature January 2005")
 spplot(JanTmpMax2015krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"), main="Temperature January 2015")
 ```
-In addition to that the comparison of the mean, minimum temperature,maximum temperature and standard deviation shows the same results. The January was the second coldest after the Janaury 1985 and the January 1965 was the warmest. The difference between 2015 and 1955 show that it even was 2.2 degrees colder in January 2015. The standard deviation proves that the measurments don't differ much.
+
+In addition to that, the comparison of the mean, minimum, maximum and standard deviation shows also no clear trend. The January 2015 was the second coldest after the January 1985 and the January 1965 was the warmest. The difference between 2015 and 1955 displays even a 2.2 degrees cooling. 
+
 ```{r, echo=FALSE, results='asis'}
 tableDataTemp1 = data.frame(c(JanTmpMax1955Stats$mean,JanTmpMax1965Stats$mean, JanTmpMax1975Stats$mean,JanTmpMax1985Stats$mean,JanTmpMax1995Stats$mean,JanTmpMax2005Stats$mean,JanTmpMax2015Stats$mean, JanTmpMax2015Stats$mean - JanTmpMax1955Stats$mean),c(JanTmpMax1955Stats$min,JanTmpMax1965Stats$min,JanTmpMax1975Stats$min,JanTmpMax1985Stats$min,JanTmpMax1995Stats$min,JanTmpMax2005Stats$min,JanTmpMax2015Stats$min,JanTmpMax2015Stats$min - JanTmpMax1955Stats$min),c(JanTmpMax1955Stats$max,JanTmpMax1965Stats$max,JanTmpMax1975Stats$max,JanTmpMax1985Stats$max,JanTmpMax1995Stats$max,JanTmpMax2005Stats$max,JanTmpMax2015Stats$max, JanTmpMax2015Stats$max - JanTmpMax1955Stats$max), c(JanTmpMax1955Stats$sd,JanTmpMax1965Stats$sd,JanTmpMax1975Stats$sd,JanTmpMax1985Stats$sd,JanTmpMax1995Stats$sd,JanTmpMax2005Stats$sd,JanTmpMax2015Stats$sd, JanTmpMax2015Stats$sd - JanTmpMax1955Stats$sd))
-row.names(tableDataTemp1) = c("1955", "1965", "1975", "1985", "1995", "2005", "2015", "2015 - 1955")
+row.names(tableDataTemp1) = c("1955", "1965", "1975", "1985", "1995", "2005", "2015", "Difference 2015 - 1955")
 colnames(tableDataTemp1) = c("Mean", "Min", "Max", "Std. Dev.")
-knitr::kable(tableDataTemp1, "html", caption="Statistics of averaged Temperature values in January")
+knitr::kable(tableDataTemp1, "html", caption="Statistics of averaged Temperature values in January") %>%
+  kable_styling(bootstrap_options = c("striped", "hover"))
 ```
-The kriging results for the averaged maximum temperature data sets in August again show no big rise but are rather very similar to one another. Unlike the plots from Janaury, there are no clear layers but the warmest parts are the ones at the Mexican border. The north and the area at the Golf of Mexico are colder. A little rise is recognizable when looking at the temperature classes which are highest in 2015.
+
+The kriging results for the averaged maximum temperature data sets in August again show no clear trend but are rather very similar to one another. Unlike in January, there are no clear layers, but a very warm region at the border to Mexico. The north and the area at the Gulf of Mexico are colder. A little rise is recognizable when looking at the interpolation classes which are highest in 2015.
+
 ```{r, echo=FALSE}
 #kriging interpolation of maximum temperature in Texas in August
 spplot(AugTmpMax1955krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"),main="Temperature August 1955")
@@ -2651,42 +2681,52 @@ spplot(AugTmpMax1995krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col=
 spplot(AugTmpMax2005krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"), main="Temperature August 2005")
 spplot(AugTmpMax2015krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"), main="Temperature August 2015")
 ```
-Corresponding to that the comparison of the mean, minimum temperature, maximum temperature and standard deviation shows only small changes in the mean temperature. The warmest August was 1985 and the coldest was 2005. The difference between 2015 and 1955 shows a rise of nearly one degree in the mean temperature but more than 2.5 degrees in the station with the highest temperatures. The standard deviation proves that the measurments don't differ much.
+
+Corresponding to that, the comparison of the statistical values shows only small changes in the mean temperature. The warmest August was 1985 and the coldest was 2005. The difference between 2015 and 1955 shows a rise of nearly one degree in the mean temperature but more than 2.5 degrees in the station with the highest temperatures. 
+
 ```{r, echo=FALSE, results='asis'}
 tableDataTemp2 = data.frame(c(AugTmpMax1955Stats$mean,AugTmpMax1965Stats$mean, AugTmpMax1975Stats$mean,AugTmpMax1985Stats$mean,AugTmpMax1995Stats$mean,AugTmpMax2005Stats$mean,AugTmpMax2015Stats$mean, AugTmpMax2015Stats$mean - AugTmpMax1955Stats$mean),c(AugTmpMax1955Stats$min,AugTmpMax1965Stats$min,AugTmpMax1975Stats$min,AugTmpMax1985Stats$min,AugTmpMax1995Stats$min,AugTmpMax2005Stats$min,AugTmpMax2015Stats$min,AugTmpMax2015Stats$min - AugTmpMax1955Stats$min),c(AugTmpMax1955Stats$max,AugTmpMax1965Stats$max,AugTmpMax1975Stats$max,AugTmpMax1985Stats$max,AugTmpMax1995Stats$max,AugTmpMax2005Stats$max,AugTmpMax2015Stats$max, AugTmpMax2015Stats$max - AugTmpMax1955Stats$max), c(AugTmpMax1955Stats$sd,AugTmpMax1965Stats$sd,AugTmpMax1975Stats$sd,AugTmpMax1985Stats$sd,AugTmpMax1995Stats$sd,AugTmpMax2005Stats$sd,AugTmpMax2015Stats$sd, AugTmpMax2015Stats$sd - AugTmpMax1955Stats$sd))
-row.names(tableDataTemp2) = c("1955", "1965", "1975", "1985", "1995", "2005", "2015", "2015 - 1955")
+row.names(tableDataTemp2) = c("1955", "1965", "1975", "1985", "1995", "2005", "2015", "Difference 2015 - 1955")
 colnames(tableDataTemp2) = c("Mean", "Min", "Max", "Std. Dev.")
-knitr::kable(tableDataTemp2, "html", caption="Statistics of averaged Temperature values in August")
+knitr::kable(tableDataTemp2, "html", caption="Statistics of averaged Temperature values in August") %>%
+  kable_styling(bootstrap_options = c("striped", "hover"))
 ```
-Taken both kriging interpolations into account we could say that maybe the impact of global warming is not that important in the winter months but shows its constant growths more in the summer months.
 
-If we compare the slope of the trend of the temperature time series we see that the rise is not very steep. Nevertheless, we can see a an obvious difference between the slope at the coast and in the interior. The slope in the interior is more than twice as steep which could indicate a stronger change of temperature here. A reason for this could be the higher heat storage capacity of the water which weakens the change at the coast.
+Taken both kriging interpolation into account we see that there is no warming in winter but a small constant growth in the summer months.
+
+
+#### Comparison coast interior
+
+If we compare the slope of the trend of the temperature time series, we see that the rise is not very steep. Nevertheless, we can see an obvious difference between the slope at the coast and in the interior. The slope in the interior is more than twice as steep which could indicate a stronger change of temperature here. A reason for this could be the higher heat storage capacity of the water which weakens the change at the coast.
+
 ```{r, echo=FALSE, results='asis'}
 coastInteriorTemp = data.frame(c(slopeTemp$slopeAngletonTemp, slopeTemp$slopeMccookTemp, slopeTemp$slopeBenbrookTemp, slopeTemp$slopefortStocktonTemp, (slopeTemp$slopeAngletonTemp+slopeTemp$slopeMccookTemp)/2, (slopeTemp$slopeBenbrookTemp+slopeTemp$slopefortStocktonTemp)/2))
 row.names(coastInteriorTemp) = c("Angleton, East (Coast)", "Mccook, South (Coast)", "Benbrook, North (Interior)", "Fort Stockton, West (Interior)", "Mean (Coast)", "Mean(Interior)")
 colnames(coastInteriorTemp) = c("Slope of trend")
-knitr::kable(coastInteriorTemp, "html", caption="Slope of trend of the temperature time series on the coast and in the interior")
+knitr::kable(coastInteriorTemp, "html", caption="Slope of trend of the temperature time series on the coast and in the interior") %>%
+  kable_styling(bootstrap_options = c("striped", "hover"))
 ```
 
-#### Precipitation
+### Precipitation
 
-The precipitation time series of the four stations in Texas all reach from 1950 until today. You can already see on the different y-axis that the amount of rainfall is very different in the different parts of Texas. Since there are many peaks in the data it is hard to recognize a trend.
+
+#### Time series data
+
+In the precipitation time series of the four stations you can already see by the different y-axis that the amount of rainfall is very diverse in different parts of Texas. Since there are many peaks in the data it is hard to recognize a trend.
+
 ```{r, echo=FALSE}
 #Precipitation time series of all four stations
-plot(PrcpAngleton)
-title(main="Precipitation time series of Angleton in the East of Texas")
+plot(PrcpAngleton, main="Precipitation time series of Angleton in the East of Texas")
 
-plot(PrcpBenbrook)
-title(main="Precipitation time series of Benbrook in the North of Texas")
+plot(PrcpBenbrook, main="Precipitation time series of Benbrook in the North of Texas")
 
-plot(PrcpfortStockton)
-title(main="Precipitation time series of Fort Stockton in the West of Texas")
+plot(PrcpfortStockton, main="Precipitation time series of Fort Stockton in the West of Texas")
 
-plot(PrcpMccook)
-title(main="Precipitation time series of Mccook in the South of Texas")
+plot(PrcpMccook, main="Precipitation time series of Mccook in the South of Texas")
 ```
 
-If we plot just the trend of the time series we see that there is a general rise of precipitation. If we compare the trends of the series we see that three of the four stations have a rising precipitation and only in Mccook the trend is falling a little bit. Remembering that Mccook had the highest rise in temperature values this could be an explanation for absent precipitation.
+If we only plot the trend of the time series, we see that there is a general rise in precipitation. By comparing these, we see that three of the four stations have an increasing precipitation and only in Mccook the trend is falling a little. Since Mccook had the highest rise in temperature values this could be an explanation for absent precipitation.
+
 ```{r, echo=FALSE}
 #trends of all four precipitation time series
 plot(trendPrcpAngleton)
@@ -2705,13 +2745,16 @@ plot(trendPrcpMccook)
 abline(linTrendMccookPrcp, col="red")
 title(main="Trend of precipitation time series of Mccook in the South of Texas")
 ```
-The autocorrelation plot of the precipitation time series of Angleton up to lag 365, representing one year, shows that there is a significant autocorrelation up to lag 80. This means that the data is strongly autocorrelated. Unlike the temperature time series autocorrelation plot it shows no periodicities since the seasonal component is much weaker here.
+
+The autocorrelation plot of the precipitation time series of Angleton up to lag 365, shows that there is a significant autocorrelation up to lag 80. This means that the data is autocorrelated but not as strong as the temperature data for example. Unlike the temperature time series, it shows no periodicities since the seasonal component is much weaker here.
+
 ```{r, echo=FALSE}
 #autocorrelation plot of the Angleton precipitation time series
-plot(acfAngletonPrcp)
-title(main="Autocorrelation plot of the precipitation time series of Angleton, TX")
+plot(acfAngletonPrcp, main="Autocorrelation plot of the precipitation time series of Angleton, TX")
 ```
-Since precipiftation is hard to predict, the forecast for the next 100 days of the precipitation time series is very constant. Beside that a little increase of precipitation is predicted. Since three of four time series have a lot of zero measurments before the forecast starts this is not very surprising and the predicted increase is really small.
+
+The forecast for the next 100 days is very constant. Nevertheless, a small increase is predicted for every station. Since all forecasts start at zero precipitation a little increase is not very surprising.
+
 ```{r, echo=FALSE}
 #forecasts for the precipitation time series
 plot(fcastPrcpAngleton, include=500, main="")
@@ -2727,7 +2770,11 @@ plot(fcastPrcpMccook, include=500, main="")
 title(main="100 days forecast for the precipitation time series of Mccook, TX")
 ```
 
-The kriging interpolation of the precipitation data for January supports the findings of the time series analysis and shows a rise in precipitation. It is thereby not the maximum numbers which get higher but the areas with a high amount of rain become larger. The rainfall is always strongest in the regions in the east of Texas, adjacent to the Golf of Mexico. In January 2015 you can see that the area with the highest amount of rainfall (4.5mm - 5.2mm) are a lot larger than in the years before even if there the highest amount was higher.
+
+#### Averaged monthly data
+
+The kriging interpolation of the averaged precipitation data for January supports the findings of the time series analysis and shows an increase in precipitation. It is not the maximum numbers which get higher but the areas with a high amount of rain become larger. The rainfall is always strongest in the regions in the east of Texas, adjacent to the Gulf of Mexico. 
+
 ```{r, echo=FALSE}
 #kriging interpolation of maximum precipitation in Texas in January
 spplot(JanPrcp1955krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"),main="Precipitation January 1955")
@@ -2738,14 +2785,19 @@ spplot(JanPrcp1995krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="w
 spplot(JanPrcp2005krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"), main="Precipitation January 2005")
 spplot(JanPrcp2015krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"), main="Precipitation January 2015")
 ```
-In addition to that the comparison of the mean, minimum precipitation, maximum precipitation and standard deviation shows the really strong rise from all the years before to 2015. The mean of the precipitation is twice as high in 2015 compared to ten years before and compared to 1955 the mean has risen by 2.2mm. The standard deviation shows that the measurements do not differ much and even if it is highest in 2015 it is still low enough to not be distorted by outliers. 
+
+In addition to that, the comparison of the mean, minimum, maximum and standard deviation shows a noticeable rise from 1955 to 2015. The mean of the precipitation is twice as high in 2015 compared to ten years before and compared to 1955 the mean has risen by 2.2mm. The standard deviation is most high in 2015 but is still low enough to not be distorted by outliers.
+
 ```{r, echo=FALSE, results='asis'}
 tableDataPrcp1 = data.frame(c(JanPrcp1955Stats$mean,JanPrcp1965Stats$mean, JanPrcp1975Stats$mean,JanPrcp1985Stats$mean,JanPrcp1995Stats$mean,JanPrcp2005Stats$mean,JanPrcp2015Stats$mean, JanPrcp2015Stats$mean - JanPrcp1955Stats$mean),c(JanPrcp1955Stats$min,JanPrcp1965Stats$min,JanPrcp1975Stats$min,JanPrcp1985Stats$min,JanPrcp1995Stats$min,JanPrcp2005Stats$min,JanPrcp2015Stats$min,JanPrcp2015Stats$min - JanPrcp1955Stats$min),c(JanPrcp1955Stats$max,JanPrcp1965Stats$max,JanPrcp1975Stats$max,JanPrcp1985Stats$max,JanPrcp1995Stats$max,JanPrcp2005Stats$max,JanPrcp2015Stats$max, JanPrcp2015Stats$max - JanPrcp1955Stats$max), c(JanPrcp1955Stats$sd,JanPrcp1965Stats$sd,JanPrcp1975Stats$sd,JanPrcp1985Stats$sd,JanPrcp1995Stats$sd,JanPrcp2005Stats$sd,JanPrcp2015Stats$sd, JanPrcp2015Stats$sd - JanPrcp1955Stats$sd))
-row.names(tableDataPrcp1) = c("1955", "1965", "1975", "1985", "1995", "2005", "2015", "2015 - 1955")
+row.names(tableDataPrcp1) = c("1955", "1965", "1975", "1985", "1995", "2005", "2015", "Difference 2015 - 1955")
 colnames(tableDataPrcp1) = c("Mean", "Min", "Max", "Std. Dev.")
-knitr::kable(tableDataPrcp1, "html", caption="Statistics of averaged Precipitation values in January")
+knitr::kable(tableDataPrcp1, "html", caption="Statistics of averaged Precipitation values in January") %>%
+  kable_styling(bootstrap_options = c("striped", "hover"))
 ```
-Unlike the kriging results for January, the results for August are not that distinct. There are no big visible changes from 1955 until 2015. Different to January there is not only much precipitation at the coast but also in the north of Texas. But the interpolation shows only very little rainfall for most parts of the state and so there are only very small changes mostly in the areas with the most predicted rainfall.
+
+Unlike the kriging results for January, the results for August are not that distinct. There are no big visible changes from 1955 until 2015. Different to January there is not only much precipitation at the coast but also in the north of Texas. The interpolation shows only very little rainfall for most parts of the state and mostly only the areas with the most predicted rainfall are changing.
+
 ```{r, echo=FALSE}
 #kriging interpolation of maximum precipitation in Texas in August
 spplot(AugPrcp1955krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"),main="Precipitation August 1955")
@@ -2756,42 +2808,52 @@ spplot(AugPrcp1995krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="w
 spplot(AugPrcp2005krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"), main="Precipitation August 2005")
 spplot(AugPrcp2015krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"), main="Precipitation August 2015")
 ```
-Interestingly, the comparison of the mean, minimum precipitation, maximum precipitation and standard deviation shows even a small decrease of rainfall in 2015. If you take into account that 2005 and 1995 the mean precipitation was always higher than before this could also be a surprisingly dry month. The fact that the maximum precipitation was highest in 2015 could also be a hint to an unusual result. Again the standar deviation shows that the data does not differ much.
+
+Interestingly, the comparison of the statistical values shows even a small decrease of rainfall in 2015. If you consider that 2005 and 1995 the mean precipitation was always higher than before this could be a sign for an unusual dry August in 2015. The high standard deviation and highest maximum in 2015 are a sign for heavier but more rare rainfall.
+
 ```{r, echo=FALSE, results='asis'}
 tableDataPrcp2 = data.frame(c(AugPrcp1955Stats$mean,AugPrcp1965Stats$mean, AugPrcp1975Stats$mean,AugPrcp1985Stats$mean,AugPrcp1995Stats$mean,AugPrcp2005Stats$mean,AugPrcp2015Stats$mean, AugPrcp2015Stats$mean - AugPrcp1955Stats$mean),c(AugPrcp1955Stats$min,AugPrcp1965Stats$min,AugPrcp1975Stats$min,AugPrcp1985Stats$min,AugPrcp1995Stats$min,AugPrcp2005Stats$min,AugPrcp2015Stats$min,AugPrcp2015Stats$min - AugPrcp1955Stats$min),c(AugPrcp1955Stats$max,AugPrcp1965Stats$max,AugPrcp1975Stats$max,AugPrcp1985Stats$max,AugPrcp1995Stats$max,AugPrcp2005Stats$max,AugPrcp2015Stats$max, AugPrcp2015Stats$max - AugPrcp1955Stats$max), c(AugPrcp1955Stats$sd,AugPrcp1965Stats$sd,AugPrcp1975Stats$sd,AugPrcp1985Stats$sd,AugPrcp1995Stats$sd,AugPrcp2005Stats$sd,AugPrcp2015Stats$sd, AugPrcp2015Stats$sd - AugPrcp1955Stats$sd))
-row.names(tableDataPrcp2) = c("1955", "1965", "1975", "1985", "1995", "2005", "2015", "2015 - 1955")
+row.names(tableDataPrcp2) = c("1955", "1965", "1975", "1985", "1995", "2005", "2015", "Difference 2015 - 1955")
 colnames(tableDataPrcp2) = c("Mean", "Min", "Max", "Std. Dev.")
-knitr::kable(tableDataPrcp2, "html", caption="Statistics of averaged Precipitation values in August")
+knitr::kable(tableDataPrcp2, "html", caption="Statistics of averaged Precipitation values in August") %>%
+  kable_styling(bootstrap_options = c("striped", "hover"))
 ```
-If you take both kriging results into account you could speak of a small rise in precipitation even if the interpolation of August is not completely distinct. 
 
-Appropriate to the results of the kriging interpolation the comparison of the slope of the trend for the time series at the coast and in the interior shows that the increase at the coast is three times higher than in the interior. Even if the slope in Mccook is decreasing, the steep slope in Angleton sets that off. Different to the temperature time series the changes are now higher at the coast.
+If you take both kriging results into account, you could speak of a small rise in precipitation even if the interpolation of August is not completely distinct.  
+
+
+#### Comparison coast interior
+
+Matching the results of the kriging interpolation the comparison of the slope of the trend for the precipitation time series shows that the increase at the coast is three times higher than in the interior. Even if the slope in Mccook is decreasing, the steep slope in Angleton sets that off. Different to the temperature time series the changes are now higher at the coast.
+
 ```{r, echo=FALSE, results='asis'}
 coastInteriorPrcp = data.frame(c(slopePrcp$slopeAngletonPrcp, slopePrcp$slopeMccookPrcp, slopePrcp$slopeBenbrookPrcp, slopePrcp$slopefortStocktonPrcp, (slopePrcp$slopeAngletonPrcp+slopePrcp$slopeMccookPrcp)/2, (slopePrcp$slopeBenbrookPrcp+slopePrcp$slopefortStocktonPrcp)/2))
 row.names(coastInteriorPrcp) = c("Angleton, East (Coast)", "Mccook, South (Coast)", "Benbrook, North (Interior)", "Fort Stockton, West (Interior)", "Mean (Coast)", "Mean(Interior)")
 colnames(coastInteriorPrcp) = c("Slope of trend")
-knitr::kable(coastInteriorPrcp, "html", caption="Slope of trend of the Precipitation time series on the coast and in the interior")
+knitr::kable(coastInteriorPrcp, "html", caption="Slope of trend of the Precipitation time series on the coast and in the interior") %>%
+  kable_styling(bootstrap_options = c("striped", "hover"))
 ```
 
-#### Evaporation
+### Evaporation
 
-The evaporation time series for the four stations are the first which not cover the whole extent from 1950 until today. The longest observation is the one in Mccook which reaches from 1963 until today. The time series of Angleton and Fort Stockton both start in the early 50's but end only ten years later in the early 60's. The time series of Benbrook starts in the late 70's but also reaches until today. To be consistent, the measurements were still used in the analysis but the results are not as comprehensive as for the other measurements. Like in the temperature time series we can also see the yearly periodicities can be seen. In none of the time series a clear trend is visible but for the two stations with the longest series it is visible that the peaks get higher with time.
+
+#### Time series data
+
+The evaporation time series of the four stations in Texas do not cover the whole extent from 1950 until today. The time series of Angleton and Fort Stockton both start in the early 1950's but end only ten years later in the early 1960's. The time series of Mccook and Benbrook start in 1963 and 1979 but both reach until today. To be consistent, the measurements were still used in the analysis, but the results are not as meaningful as for the other measurements. Like in the temperature time series we can see yearly periodicities. In none of the time series a clear trend is visible but for the two stations with the longest series the peaks get higher with time.
+
 ```{r, echo=FALSE}
 #Evaporation time series of all four stations
-plot(EvapAngleton)
-title(main="Evaporation time series of Angleton in the East of Texas")
+plot(EvapAngleton, main="Evaporation time series of Angleton in the East of Texas")
 
-plot(EvapBenbrook)
-title(main="Evaporation time series of Benbrook in the North of Texas")
+plot(EvapBenbrook, main="Evaporation time series of Benbrook in the North of Texas")
 
-plot(EvapfortStockton)
-title(main="Evaporation time series of Fort Stockton in the West of Texas")
+plot(EvapfortStockton, main="Evaporation time series of Fort Stockton in the West of Texas")
 
-plot(EvapMccook)
-title(main="Evaporation time series of Mccook in the South of Texas")
+plot(EvapMccook, main="Evaporation time series of Mccook in the South of Texas")
 ```
 
-Different from the assumption that the evaporation should be increasing due to higher temperatures, the trend of three of the four stations is decreasing. Even if we leave out the stations with too little data, the time series of the longest period also shows a decreasing trend. An explanation for this could be the increasing precipitation which prevents evaporation. According to research the increased cloud coverage and aerosol concentration lead to an decreased evaporation (Roderick and Farquhar, 2002). Since the peaks of the time series are a lot higher today, the evaporation on sunny days seems to be stronger than former.
+Different from the assumption that the evaporation should be increasing due to higher temperatures, the trend of three of the four stations is decreasing. Even if we leave out the stations with too little data, the time series of the longest period also shows a decreasing trend. According to research the increased cloud coverage and aerosol concentration leads to a decreased evaporation (Roderick and Farquhar, 2002). Nevertheless, the evaporation on sunny days seems to be stronger than former because of higher peaks at the end of the time series.
+
 ```{r, echo=FALSE}
 #trends of all four Evaporation time series
 plot(trendEvapAngleton)
@@ -2810,13 +2872,16 @@ plot(trendEvapMccook)
 abline(linTrendMccookEvap, col="red")
 title(main="Trend of Evaporation time series of Mccook in the South of Texas")
 ```
-The autocorrelation plot for Angleton shows the seasonal periodicities of the evaporation. In the winter months there is only very little evaporation and in the summer months the evaporation is very high. 
+
+The autocorrelation plot for Angleton shows the seasonal periodicities of the evaporation. In the winter there is only very little evaporation compared to the summer.
+
 ```{r, echo=FALSE}
 #autocorrelation plot of the Angleton Evaporation time series
-plot(acfAngletonEvap)
-title(main="Autocorrelation plot of the Evaporation time series of Angleton, TX")
+plot(acfAngletonEvap, main="Autocorrelation plot of the Evaporation time series of Angleton, TX")
 ```
-According to the decreasing trend, also most of the forecasts expect a further decrease of evaporation. Interestingly the forecast for Mccook which also has a decreasing trend is strongly rising in the first days of the prediction. Overall the forecasts are rather static with only small changes.
+
+According to the decreasing trend, also most of the forecasts expect a further decrease of evaporation. Interestingly, the forecast for Mccook is strongly rising in the first days although it has a decreasing trend. Overall the forecasts are rather static with only small changes.
+
 ```{r, echo=FALSE}
 #forecasts for the Evaporation time series
 plot(fcastEvapAngleton, include=500, main="")
@@ -2832,7 +2897,11 @@ plot(fcastEvapMccook, include=500, main="")
 title(main="100 days forecast for the Evaporation time series of Mccook, TX")
 ```
 
-The kriging interpolation for January are also not showing a clear trend in the one or the other direction. Appropriate to the kriging results of the temperature data sets we see that the evaporation is strongest in the regions where the temperature is high. In this case this is at the border to Mexico in the southwest of Texas.
+
+#### Averaged monthly data
+
+The kriging interpolation for January is not showing a clear trend in the one or the other direction. Matching to the kriging results of temperature we see that the evaporation is strongest in the regions where temperature is high. In this case this is at the border to Mexico in the southwest of Texas.
+
 ```{r, echo=FALSE}
 #kriging interpolation of maximum Evaporation in Texas in January
 spplot(JanEvap1955krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"),main="Evaporation January 1955")
@@ -2843,14 +2912,19 @@ spplot(JanEvap1995krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="w
 spplot(JanEvap2005krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"), main="Evaporation January 2005")
 spplot(JanEvap2015krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"), main="Evaporation January 2015")
 ```
-According to the previous findings the comparison of the basic statistics shows that there is no clear trend for the evaporation but it rather seems to decrease than to increase. This also fits to the paper of Roderick and Farquhar. Another interesting thing is that the maximum evaporation and the standard deviation are highest in 2015 since on sunny days the evaporation is stronger nowadays and the variations become higher. 
+
+According to the previous findings the comparison of the basic statistics shows that there is no clear trend for the evaporation, but it rather seems to decrease than to increase. Another interesting thing is that the maximum evaporation and the standard deviation are highest in 2015 indicating that on sunny days the evaporation is stronger nowadays and the variations become higher.
+
 ```{r, echo=FALSE, results='asis'}
 tableDataEvap1 = data.frame(c(JanEvap1955Stats$mean,JanEvap1965Stats$mean, JanEvap1975Stats$mean,JanEvap1985Stats$mean,JanEvap1995Stats$mean,JanEvap2005Stats$mean,JanEvap2015Stats$mean, JanEvap2015Stats$mean - JanEvap1955Stats$mean),c(JanEvap1955Stats$min,JanEvap1965Stats$min,JanEvap1975Stats$min,JanEvap1985Stats$min,JanEvap1995Stats$min,JanEvap2005Stats$min,JanEvap2015Stats$min,JanEvap2015Stats$min - JanEvap1955Stats$min),c(JanEvap1955Stats$max,JanEvap1965Stats$max,JanEvap1975Stats$max,JanEvap1985Stats$max,JanEvap1995Stats$max,JanEvap2005Stats$max,JanEvap2015Stats$max, JanEvap2015Stats$max - JanEvap1955Stats$max), c(JanEvap1955Stats$sd,JanEvap1965Stats$sd,JanEvap1975Stats$sd,JanEvap1985Stats$sd,JanEvap1995Stats$sd,JanEvap2005Stats$sd,JanEvap2015Stats$sd, JanEvap2015Stats$sd - JanEvap1955Stats$sd))
-row.names(tableDataEvap1) = c("1955", "1965", "1975", "1985", "1995", "2005", "2015", "2015 - 1955")
+row.names(tableDataEvap1) = c("1955", "1965", "1975", "1985", "1995", "2005", "2015", "Difference 2015 - 1955")
 colnames(tableDataEvap1) = c("Mean", "Min", "Max", "Std. Dev.")
-knitr::kable(tableDataEvap1, "html", caption="Statistics of averaged Evaporation values in January")
+knitr::kable(tableDataEvap1, "html", caption="Statistics of averaged Evaporation values in January") %>%
+  kable_styling(bootstrap_options = c("striped", "hover"))
 ```
-The kriging interpolation results for August show no clear trend as well. Interestingly, the area with the strongest evaporation is now the northwest at the border to New Mexico. As expected the evaporation values are a lot higher since the temperatures are also a loth higher in August.
+
+The kriging interpolation results for August show no clear trend as well. Interestingly, the area with the strongest evaporation is now the northwest at the border to New Mexico. As expected the evaporation values are higher than in January since the temperatures are also a lot higher in August.
+
 ```{r, echo=FALSE}
 #kriging interpolation of maximum Evaporation in Texas in August
 spplot(AugEvap1955krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"),main="Evaporation August 1955")
@@ -2861,82 +2935,101 @@ spplot(AugEvap1995krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="w
 spplot(AugEvap2005krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"), main="Evaporation August 2005")
 spplot(AugEvap2015krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"), main="Evaporation August 2015")
 ```
-The comparison of the basic statistical values for the evaporation data sets fit to the ones from January. Beside the 2015 result it looks more like a decrease than an increase. Again the maximum evaporation value is from 2015 like the largest standard deviation. This indicates a stronger but more rare evaporation.  
+
+The basic statistical values in August are similar to the ones from January. Beside the values in 2015 it looks more like a decrease than an increase. Again, the maximum evaporation value and highest standard deviation is from 2015. This indicates a stronger but more rare evaporation.
+
 ```{r, echo=FALSE, results='asis'}
 tableDataEvap2 = data.frame(c(AugEvap1955Stats$mean,AugEvap1965Stats$mean, AugEvap1975Stats$mean,AugEvap1985Stats$mean,AugEvap1995Stats$mean,AugEvap2005Stats$mean,AugEvap2015Stats$mean, AugEvap2015Stats$mean - AugEvap1955Stats$mean),c(AugEvap1955Stats$min,AugEvap1965Stats$min,AugEvap1975Stats$min,AugEvap1985Stats$min,AugEvap1995Stats$min,AugEvap2005Stats$min,AugEvap2015Stats$min,AugEvap2015Stats$min - AugEvap1955Stats$min),c(AugEvap1955Stats$max,AugEvap1965Stats$max,AugEvap1975Stats$max,AugEvap1985Stats$max,AugEvap1995Stats$max,AugEvap2005Stats$max,AugEvap2015Stats$max, AugEvap2015Stats$max - AugEvap1955Stats$max), c(AugEvap1955Stats$sd,AugEvap1965Stats$sd,AugEvap1975Stats$sd,AugEvap1985Stats$sd,AugEvap1995Stats$sd,AugEvap2005Stats$sd,AugEvap2015Stats$sd, AugEvap2015Stats$sd - AugEvap1955Stats$sd))
-row.names(tableDataEvap2) = c("1955", "1965", "1975", "1985", "1995", "2005", "2015", "2015 - 1955")
+row.names(tableDataEvap2) = c("1955", "1965", "1975", "1985", "1995", "2005", "2015", "Difference 2015 - 1955")
 colnames(tableDataEvap2) = c("Mean", "Min", "Max", "Std. Dev.")
-knitr::kable(tableDataEvap2, "html", caption="Statistics of averaged Evaporation values in August")
+knitr::kable(tableDataEvap2, "html", caption="Statistics of averaged Evaporation values in August") %>%
+  kable_styling(bootstrap_options = c("striped", "hover"))
 ```
-If we look at both kriging results it seems like the evaporation is not changing very strongly with the climate change. According to the findings of Roderick and Farquhar it seems to have a weak decreasing trend.
 
-The comparison of the slope of trends for the evaporation time series also show this decrease. These results have to be considered carefully since the time series not cover the same temporal extent. The comparison indicates that the decrease in the interior is higher than at the coast. This stands in contrast to the higher increase of temperature in the interior. But according to the presented research this does not have to be a contrast. 
+If we look at both kriging results it seems like the evaporation is not changing very strongly with the climate change. According to the findings of Roderick and Farquhar there is a weak decreasing trend.
+
+
+#### Comparison coast interior
+
+The comparison of the slope of trends also shows this decrease in evaporation but must be considered carefully since the time series not cover the same temporal extent. The comparison indicates that the decrease in the interior is higher than at the coast. This stands in contrast to the higher increase of temperature in the interior. 
+
 ```{r, echo=FALSE, results='asis'}
 coastInteriorEvap = data.frame(c(slopeEvap$slopeAngletonEvap, slopeEvap$slopeMccookEvap, slopeEvap$slopeBenbrookEvap, slopeEvap$slopefortStocktonEvap, (slopeEvap$slopeAngletonEvap+slopeEvap$slopeMccookEvap)/2, (slopeEvap$slopeBenbrookEvap+slopeEvap$slopefortStocktonEvap)/2))
 row.names(coastInteriorEvap) = c("Angleton, East (Coast)", "Mccook, South (Coast)", "Benbrook, North (Interior)", "Fort Stockton, West (Interior)", "Mean (Coast)", "Mean(Interior)")
 colnames(coastInteriorEvap) = c("Slope of trend")
-knitr::kable(coastInteriorEvap, "html", caption="Slope of trend of the Evaporation time series on the coast and in the interior")
+knitr::kable(coastInteriorEvap, "html", caption="Slope of trend of the Evaporation time series on the coast and in the interior") %>%
+  kable_styling(bootstrap_options = c("striped", "hover"))
 ```
 
-#### Wind
+### Wind
 
-The evaporation time series for the total wind movement cover like the evaporation time series not the full extent from 1950 until today. Again the stations of Benbrook and Mccook cover longer periods than the stations in Angleton and Fort Stockton. These stations only have data from the early 50' until the early 60's. The total wind movement is measured which represents the summed wind speeds for one day. We can see the yearly periodicity of the time series but no clear trend is visible.
+
+#### Time series data
+
+Like the evaporation time series, the total wind movement time series do not cover the full extent from 1950 until today. Again, the stations of Benbrook (1979 - today) and Mccook (1963 - 2003) cover longer periods than the stations in Angleton (1953 - 1963) and Fort Stockton (1950 - 1960). The total wind movement represents the summed wind speeds for one day. We can see yearly periodicities of the time series but no clear trend.
+
 ```{r, echo=FALSE}
 #Total Wind Movement time series of all four stations
-plot(WindAngleton)
-title(main="Total Wind Movement time series of Angleton in the East of Texas")
+plot(WindAngleton, main="Total Wind Movement time series of Angleton in the East of Texas")
 
-plot(WindBenbrook)
-title(main="Total Wind Movement time series of Benbrook in the North of Texas")
+plot(WindBenbrook, main="Total Wind Movement time series of Benbrook in the North of Texas")
 
-plot(WindfortStockton)
-title(main="Total Wind Movement time series of Fort Stockton in the West of Texas")
+plot(WindfortStockton, main="Total Wind Movement time series of Fort Stockton in the West of Texas")
 
-plot(WindMccook)
-title(main="Total Wind Movement time series of Mccook in the South of Texas")
+plot(WindMccook, main="Total Wind Movement time series of Mccook in the South of Texas")
 ```
-If we compare only the trends of the time series we see a very interesting pattern. The time series of Angleton and Benbrook have a weak increasing trend and the time series of Fort Stockton and Mccook have a strong decreasing trend. If we only consider the time series with the longer observation periods we also have one with an increasing trend (Benbrook) and one with a decreasing trend (Mccook).
+
+If we compare only the trends of the time series, we see a very ambiguous pattern. The time series of Angleton and Benbrook have a weak increasing trend and the time series of Fort Stockton and Mccook have a strong decreasing trend. If we only consider the time series with the longer observation periods we have one with an increasing trend (Benbrook) and one with a decreasing trend (Mccook).
+
 ```{r, echo=FALSE}
 #trends of all four Total Wind Movement time series
 plot(trendWindAngleton)
 abline(linTrendAngletonWind, col="red")
-title(main="Trend of Total Wind Movement time series of Angleton in the East of Texas")
+title(main="Trend of Total Wind Movement time series of Angleton in the East of Texas", cex.main=1)
 
 plot(trendWindBenbrook)
 abline(linTrendBenbrookWind, col="red")
-title(main="Trend of Total Wind Movement time series of Benbrook in the North of Texas")
+title(main="Trend of Total Wind Movement time series of Benbrook in the North of Texas", cex.main=1)
 
 plot(trendWindfortStockton)
 abline(linTrendfortStocktonWind, col="red")
-title(main = "Trend of Total Wind Movement time series of Fort Stockton in the West of Texas")
+title(main = "Trend of Total Wind Movement time series of Fort Stockton in the West of Texas", cex.main=1)
 
 plot(trendWindMccook)
 abline(linTrendMccookWind, col="red")
-title(main="Trend of Total Wind Movement time series of Mccook in the South of Texas")
+title(main="Trend of Total Wind Movement time series of Mccook in the South of Texas", cex.main=1)
 ```
-The autocorrelation plot shows the same yearly periodicity as the temperature and the evaporation time series. So it seems like there is more wind movement in the winter months compared to the summer months.
+
+The autocorrelation plot shows the same yearly periodicity as the temperature and the evaporation time series since the wind is stronger in the winter.
+
 ```{r, echo=FALSE}
 #autocorrelation plot of the Angleton Total Wind Movement time series
-plot(acfAngletonWind)
-title(main="Autocorrelation plot of the Total Wind Movement time series of Angleton, TX")
+plot(acfAngletonWind, main="")
+title(main="Autocorrelation plot of the Total Wind Movement time series of Angleton, TX", cex.main=1)
 ```
-According to the trends of the time series the forecast for Angleton which had an increasing trend predicts also an increase of wind movement and for Mccook which had an decreasing trend an decrease of wind movement. Interestingly, the forecasts for the other two stations are different than there trends. For Benbrook the forecast predicts a strong decrease in opposite to the increasing trend. An explanation for this could be that the last measurement before the forecast is very high (over 200) and so a decrease is most likely. For Fort stockton an increase is predicted although the trend was stongly decreasing.
+
+According to the trends of the time series the forecast for Angleton and Mccook are also increasing respectively decreasing. Interestingly, the forecasts for the other two stations are different than their trends. For Benbrook the forecast predicts a strong decrease in opposite to the increasing trend. An explanation for this could be that the last measurement is very high (over 200) and a decrease is most likely to occur. For Fort Stockton an increase is predicted although the trend is strongly decreasing.
+
 ```{r, echo=FALSE}
 #forecasts for the Total Wind Movement time series
 plot(fcastWindAngleton, include=500, main="")
-title(main="100 days forecast for the Total Wind Movement time series of Angleton, TX")
+title(main="100 days forecast for the Total Wind Movement time series of Angleton, TX", cex.main=1)
 
 plot(fcastWindBenbrook, include=500, main="")
-title(main="100 days forecast for the Total Wind Movement time series of Benbrook, TX")
+title(main="100 days forecast for the Total Wind Movement time series of Benbrook, TX", cex.main=1)
 
 plot(fcastWindfortStockton, include=500, main="")
-title(main="100 days forecast for the Total Wind Movement time series of Fort Stockton, TX")
+title(main="100 days forecast for the Total Wind Movement time series of Fort Stockton, TX", cex.main=1)
 
 plot(fcastWindMccook, include=500, main="")
-title(main="100 days forecast for the Total Wind Movement time series of Mccook, TX")
+title(main="100 days forecast for the Total Wind Movement time series of Mccook, TX", cex.main=1)
 ```
 
-Different from the time series the data used for the kriging interpolation are the daily average wind speeds. Since these measurements are only observed since 1980 the kriging includes in this case only the years 1985, 1995, 2005 and 2015. The kriging results for January show no clear trend at first glance but although the results for 2015 and 2005 have very high borders for their wind speed classes these only apply for very small regions in the west of Texas. Since this leads to a confusing visualization a trend is hard to recognize in the results.
+
+#### Averaged monthly data
+
+For the kriging interpolation the averaged daily average wind speeds are used. Since these measurements are only observed since 1980 the kriging includes only the years 1985, 1995, 2005 and 2015. The kriging results for January show no clear trend at first glance. The visualizations are a bit confusing since the results for 2015 and 2005 have a very high maximum wind speed class which only applies for very small regions in the west of Texas. 
+
 ```{r, echo=FALSE}
 #kriging interpolation of maximum Wind Speed in Texas in January
 spplot(JanWind1985krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"), main="Wind Speed January 1985")
@@ -2944,14 +3037,19 @@ spplot(JanWind1995krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="w
 spplot(JanWind2005krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"), main="Wind Speed January 2005")
 spplot(JanWind2015krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"), main="Wind Speed January 2015")
 ```
-This gets easier when we compare the basic statistical values of the wind speed data sets. We see a distinct decreasing trend in wind speed. The average wind speed of 1985 is about 0.7 m/h faster compared to the average wind speed of 2015. Only the variablity gets stronger which is represented by the highest standard deviation in 2015. So we have on average a more slow wind speed but the days with an unusual high wind speed get more.
+
+By comparing the statistical values, we see a distinct decreasing trend in wind speed. The average wind speed of 1985 is about 0.7 m/h faster compared to the average wind speed of 2015. Only the variability gets stronger which is represented by the highest standard deviation in 2015. We have on average a slower wind speed but more days with an unusual high wind speed.
+
 ```{r, echo=FALSE, results='asis'}
 tableDataWind1 = data.frame(c(JanWind1985Stats$mean,JanWind1995Stats$mean,JanWind2005Stats$mean,JanWind2015Stats$mean, JanWind2015Stats$mean - JanWind1985Stats$mean),c(JanWind1985Stats$min,JanWind1995Stats$min,JanWind2005Stats$min,JanWind2015Stats$min,JanWind2015Stats$min - JanWind1985Stats$min),c(JanWind1985Stats$max,JanWind1995Stats$max,JanWind2005Stats$max,JanWind2015Stats$max, JanWind2015Stats$max - JanWind1985Stats$max), c(JanWind1985Stats$sd,JanWind1995Stats$sd,JanWind2005Stats$sd,JanWind2015Stats$sd, JanWind2015Stats$sd - JanWind1985Stats$sd))
-row.names(tableDataWind1) = c("1985", "1995", "2005", "2015", "2015 - 1985")
+row.names(tableDataWind1) = c("1985", "1995", "2005", "2015", "Difference 2015 - 1985")
 colnames(tableDataWind1) = c("Mean", "Min", "Max", "Std. Dev.")
-knitr::kable(tableDataWind1, "html", caption="Statistics of averaged Wind Speed values in January")
+knitr::kable(tableDataWind1, "html", caption="Statistics of averaged Wind Speed values in January") %>%
+  kable_styling(bootstrap_options = c("striped", "hover"))
 ```
-Like in January we also have a confusing visualization of 2015 and 2005 in August since some high measurements disturb the kriging. So it is again hard to recognize a trend in the kriging results. Like in January the highest wind speeds appear in the west and in the north of Texas. As expected the wind speeds in august are much slower tcompared to January. 
+
+In August we have the same confusing visualizations of 2015 and 2005 like in January since some high measurements disturb the interpolation. By this it is again hard to recognize a trend. Like in January the highest wind speeds appear in the west and in the north of Texas. As expected the wind speeds in august are much slower compared to January.
+
 ```{r, echo=FALSE}
 #kriging interpolation of maximum Wind Speed in Texas in August
 spplot(AugWind1985krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"), main="Wind Speed August 1985")
@@ -2959,33 +3057,43 @@ spplot(AugWind1995krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="w
 spplot(AugWind2005krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"), main="Wind Speed August 2005")
 spplot(AugWind2015krige1[1], sp.layout=list(texasMap, first=FALSE, lwd=2, col="white"), main="Wind Speed August 2015")
 ```
-Unlike in January the comparison of the basic statistical values for the average wind speed data sets show no clear trend. If we would leave out 2015 there would be also an decreasing trend. Again the 2015 data set has the largest variability regarding the difference between the minimal and maximal value. Different from before the standard deviation is not highest in 2015. 
+
+Unlike in January the comparison of the basic statistical values shows no clear trend. If we would leave out 2015 there is again a decreasing trend. 2015 the data has the largest variability regarding the difference between the minimal and maximal value. Different from before the standard deviation is not highest in 2015.
+
 ```{r, echo=FALSE, results='asis'}
 tableDataWind2 = data.frame(c(AugWind1985Stats$mean,AugWind1995Stats$mean,AugWind2005Stats$mean,AugWind2015Stats$mean, AugWind2015Stats$mean - AugWind1985Stats$mean),c(AugWind1985Stats$min,AugWind1995Stats$min,AugWind2005Stats$min,AugWind2015Stats$min,AugWind2015Stats$min - AugWind1985Stats$min),c(AugWind1985Stats$max,AugWind1995Stats$max,AugWind2005Stats$max,AugWind2015Stats$max, AugWind2015Stats$max - AugWind1985Stats$max), c(AugWind1985Stats$sd,AugWind1995Stats$sd,AugWind2005Stats$sd,AugWind2015Stats$sd, AugWind2015Stats$sd - AugWind1985Stats$sd))
-row.names(tableDataWind2) = c("1985", "1995", "2005", "2015", "2015 - 1985")
+row.names(tableDataWind2) = c("1985", "1995", "2005", "2015", "Difference 2015 - 1985")
 colnames(tableDataWind2) = c("Mean", "Min", "Max", "Std. Dev.")
-knitr::kable(tableDataWind2, "html", caption="Statistics of averaged Wind Speed values in August")
+knitr::kable(tableDataWind2, "html", caption="Statistics of averaged Wind Speed values in August") %>%
+  kable_styling(bootstrap_options = c("striped", "hover"))
 ```
-Summarized the wind speed seems to decrease with the climate change. Since there was a clear decreasing trend in the data sets of January and the differences in the data sets of August was only very small this indicates an overall decreasing trend.
 
-for the first time the comparison of the slope of trends for the time series shows no difference between the coast and the interior. This result has to be considered carefully since the time series have not the same temporal extent but as one station at the coast and one in the interior have a larger extent it is comparable. This again shows a decreasing overall trend of the wind movement. 
+Summarized the wind speed seems to decrease with the climate change. Since there was a clear decreasing trend in the data sets for January and the differences in the data sets for August were only very small, this indicates an overall decreasing trend.
+
+
+#### Comparison coast interior
+
+For the first time the comparison of the slope of the time series trends shows no difference between coast and interior. This result must be considered carefully since the time series have not the same temporal extent. Nevertheless, it again shows a decreasing overall trend of the wind movement. 
+
 ```{r, echo=FALSE, results='asis'}
 coastInteriorWind = data.frame(c(slopeWind$slopeAngletonWind, slopeWind$slopeMccookWind, slopeWind$slopeBenbrookWind, slopeWind$slopefortStocktonWind, (slopeWind$slopeAngletonWind+slopeWind$slopeMccookWind)/2, (slopeWind$slopeBenbrookWind+slopeWind$slopefortStocktonWind)/2))
 row.names(coastInteriorWind) = c("Angleton, East (Coast)", "Mccook, South (Coast)", "Benbrook, North (Interior)", "Fort Stockton, West (Interior)", "Mean (Coast)", "Mean(Interior)")
 colnames(coastInteriorWind) = c("Slope of trend")
-knitr::kable(coastInteriorWind, "html", caption="Slope of trend of the Total Wind Movement time series on the coast and in the interior")
+knitr::kable(coastInteriorWind, "html", caption="Slope of trend of the Total Wind Movement time series on the coast and in the interior") %>%
+  kable_styling(bootstrap_options = c("striped", "hover"))
 ```
 
 ## Discussion
 
-The results of the analysis show that there is a remarkable climate change in Texas over the last 70 years. The temperature has risen by about x degrees and is predicted to forther increase. The precipitation shows a small increase by about x mm and is also predicted to further increase. The evaporation is decreasing even if the results are not completely distinct. The wind speed and total wind movement are also decreasing.
+The results of the analysis show that there is a remarkable climate change in Texas over the last 70 years. The temperature has risen by about 1 degree in August and is predicted to further increase. The precipitation shows a small increase by about 2 mm in January and is also predicted to further increase. The evaporation is decreasing even if the results are not completely distinct. The wind speed and total wind movement are also decreasing.
 There are differences in the magnitude of the climate change at the coast and in the interior. At the coast the increase of temperature is stronger as well as the decrease of evaporation while the increase of precipitation is stronger in the interior. The decrease of wind speed and wind movement shows no differences between coast and interior.
-Unfortunately, the evaporation and total wind movement time series do not cover the full temporal extent from 1950 until today but sometimes only ten years of data. This could influence the results since they were analyzed in the same way as the other time series. With a more complete data set the results would be more meaningful. According to that it would be better to take more than four station into account to get more credible results. The same applies for the kriging interpolation. With more data from different months or also additional years the results could be different and would be more meaningful. Since the used data already has a size of about 100 megabyte it would be too computationally intensive to use more. The chosen data seemed to be the best fitting according to the research question.
+Since most times the maximum values were most high in 2015 this could indicate more extreme climate conditions which could be a starting point for further research.
+Unfortunately, the evaporation and total wind movement time series do not cover the full temporal extent from 1950 until today but sometimes only ten years of data. This could influence the results since they were analysed in the same way as the other time series. With a more complete data set the results would be more meaningful. According to that it would be better to take more than four stations into account to get more credible results. The same applies for the kriging interpolation. With more data from different months or also additional years the results could be different and would be more meaningful. Since the used data already has a size of about 100 megabyte it would have been too computationally intensive to use more. The chosen data seemed to be the best fitting according to the research question.
 
 ## Conclusion
 
-There is a remarkable climate change in Texas regarding the climate elements temperature, precipitation, evaporation and wind speed. By this it provides an additional hint of the climate change and adds to the multitude of research in this field. 
-Further research should use more and different data for this analysis to proove these results and create more meaningful outcomes. Furthermore, other methods for the analysis could be used like dynamic time warping for example which provides algorithms to compare time series (Dynamic Time Warp Project, 2018).
+There is a remarkable climate change in Texas regarding the climate elements temperature, precipitation, evaporation and wind speed. By this the work provides an additional evidence of the climate change and adds to the multitude of research in this field. 
+Further research should use more and different data for this analysis to prove these results and create more meaningful outcomes. Furthermore, other methods for the analysis could be used like dynamic time warping for example which provides algorithms to compare time series (Dynamic Time Warp Project, 2018).
 
 ## References
 
@@ -3010,8 +3118,3 @@ Roderick, M. L. and Farquhar, G. D., 2002. "The Cause of Decreased Pan Evaporati
 Schmandt, J., North, G. R. and Clarkson, J., 2011. "The impact of global warming on Texas". 2nd Edition. Austin, TX. University of Texas Press
 
 Texas Almanac, 2018. "Texas State Historical Association, Facts". Retrieved March 13, 2018 from: <http://texasalmanac.com/topics/facts-profile>
-
-```{r, echo=FALSE}
-
-```
-
